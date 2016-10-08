@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         explorer
-# Version:      0.0.2
+# Version:      0.0.3
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -16,8 +16,9 @@
 #               Designed to be an expanded and modernised version of
 #               Linux Explorer by Joe Santoro of Unix Consultants
 
- MYVERSION="0.0.2"                                #
+ MYVERSION="0.0.3"                                #
    LICENSE="CC-BA"                                #
+ COPYRIGHT="Richard Spindler"                     #
     MYDATE="$(/bin/date +'%Y.%m.%d.%m.%H.%M')"    # Date and time now
     MYNAME=$(basename $0)                         #
     WHOAMI=$(/usr/bin/whoami)                     # The user running the script
@@ -25,7 +26,7 @@
 MYHOSTNAME=$(/bin/uname -n)                       # The hostname of this server
 MYSHORTNAME=$(echo $MYHOSTNAME | cut -f 1 -d'.')  #
    TMPFILE="/tmp/$(basename $0).$$"               # Temporary File
-    TOPDIR="/opt/LINUXexplo"                      # Top level output directory
+    TOPDIR="/var/explorer/output"                 # Top level output directory
  CHECKTYPE=""                                     # Nothing selected
      CWDIR=""                                     #
    VERBOSE=0                                      # Set to see the scripts progress used
@@ -33,6 +34,7 @@ MYSHORTNAME=$(echo $MYHOSTNAME | cut -f 1 -d'.')  #
   FULLSOFT=0                                      # Set to Verify Software installation
                                                   # this takes a very long time
 KEEPFILES="0"                                     # Default to remove files created by this script
+ CODENAME="LINUXexplo"
 unset GZIP                                        # Ensure that GZIP is unset for later use.
 
 # Set the path for the script to run.
@@ -40,7 +42,8 @@ unset GZIP                                        # Ensure that GZIP is unset fo
 PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:$PATH
 export PATH
 
-EXPLCFG=/etc/linuxExplo.cfg
+EXPLCFGDIR=/etc/explorer/default
+   EXPLCFG=$EXPLCFGDIR/explorer
 
 ##############################################################################
 #
@@ -365,17 +368,18 @@ myselection() {
 
 ShowUsage() {
   echo
-  echo "$MYNAME Version $MYVERSION - $COPYRIGHT "
+  echo "$MYNAME Version $MYVERSION - $COPYRIGHT"
   echo
   echo "  usage:    $MYNAME [option] "
   echo
   echo "    -d      Target directory for explorer files"
+  echo "    -g      Create explorer config"
   echo "    -k      Keep files created by this script"
   echo "    -t      [hardware] [software] [configs] [cluster] [all] [disks] [network]"
   echo "    -v      Verbose output"
   echo "    -s      Verify Package Installation"
   echo "    -h      This help message"
-  echo "    -V      Version Number of LINUXEXPLO"
+  echo "    -V      Version Number of $CODENAME"
   echo
   exit 1
 }
@@ -2209,12 +2213,8 @@ x11_info() {
 ##############################################################################
 
 taritup_info() {
-  if [ "$CWDIR" != "" ] ; then
-    cd $CWDIR
-  else
-    cd $LOGDIR
-  fi
-  $TAR czf ${TARFILE} . > /dev/null 2>&1
+  cd $TOPDIR
+  $TAR czf ${TARFILE} $EXPLHEAD > /dev/null 2>&1
   if [ $? -ne 0 ] ; then
     if [ -x $LOGGER ] ; then
       $LOGGER -s "[ERROR]: creating the linux-explorer $TARFILE"
@@ -2409,6 +2409,9 @@ EOF
   # Create support information so we don't have to ask the customer each time.
 
   if [ ! -f  $EXPLCFG ] ; then
+    if [ ! -d $EXPLCFGDIR ]; then
+      MakeDir $EXPLCFGDIR
+    fi
     cat <<-EOF  > $EXPLCFG
     # Customer Contact Name
     EXP_USER_NAME="$NAME"
@@ -2430,6 +2433,22 @@ EOF
     EXP_WHICH="all"
 EOF
   fi
+}
+
+##############################################################################
+#
+#      Function : redo_System_Info
+#    Parameters : None
+#        Output : None
+#         Notes : Recreate system info for explorer config
+#
+##############################################################################
+
+redo_System_Info() {
+  if [ -f $EXPLCFG ] ; then
+    rm $EXPLCFG
+  fi
+  System_Info
 }
 
 ##############################################################################
@@ -2492,7 +2511,7 @@ trap '$RM -f $TMPFILE >/dev/null 2>&1; exit' 0 1 2 3 15
 #                   Check the command line options
 ##############################################################################
 
-while getopts ":d:k:t:vhV" OPT ; do
+while getopts ":d:k:t:gvhV" OPT ; do
   case "$OPT" in
     d)
       if [ $OPTARG = "/" ] ; then
@@ -2527,6 +2546,10 @@ while getopts ":d:k:t:vhV" OPT ; do
       echo
       exit 0
       ;;
+    g)
+      redo_System_Info
+      exit 0
+      ;;
     h)
       ShowUsage
       ;;
@@ -2539,8 +2562,9 @@ if [ ${VERBOSE} -gt 0 ] ; then
   fi
 fi
 
-    LOGTOP="${TOPDIR}/linux"
-    LOGDIR="${LOGTOP}/explorer.${HOSTID}.${MYSHORTNAME}-${MYDATE}"
+    LOGTOP="${TOPDIR}"
+  EXPLHEAD="explorer.${HOSTID}.${MYSHORTNAME}-${MYDATE}"
+    LOGDIR="${LOGTOP}/${EXPLHEAD}"
    TARFILE="${LOGDIR}.tar.gz"
  NOTFNDLOG="${LOGDIR}/command_not_found.out"
 CLUSTERDIR=${LOGDIR}/clusters
