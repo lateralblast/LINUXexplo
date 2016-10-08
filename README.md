@@ -1,3 +1,5 @@
+![alt tag](https://raw.githubusercontent.com/lateralblast/LINUXexplo/master/explorer.jpg)
+
 LINUXexplo
 ==========
 
