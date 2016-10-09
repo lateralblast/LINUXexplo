@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         explorer
-# Version:      0.0.4
+# Version:      0.0.5
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -16,7 +16,7 @@
 #               Designed to be an expanded and modernised version of
 #               Linux Explorer by Joe Santoro of Unix Consultants
 
- MYVERSION="0.0.4"                                #
+ MYVERSION="0.0.5"                                #
    LICENSE="CC-BA"                                #
  COPYRIGHT="Richard Spindler"                     #
     MYDATE="$(/bin/date +'%Y.%m.%d.%m.%H.%M')"    # Date and time now
@@ -228,7 +228,7 @@ network_functions() {
 ##############################################################################
 
 software_functions() {
-  MakeDir ${LOGDIR}/software
+  MakeDir ${LOGDIR}/patch+pkg
   rpm_info
   deb_info
   pacman_info
@@ -276,7 +276,7 @@ general_functions() {
   MakeDir ${LOGDIR}/logs
   MakeDir ${LOGDIR}/mail
   MakeDir ${LOGDIR}/system
-  MakeDir ${LOGDIR}/software
+  MakeDir ${LOGDIR}/patch+pkg
   MakeDir ${LOGDIR}/var
   MakeDir ${LOGDIR}/virtual
   system_logs_info
@@ -855,7 +855,7 @@ boot_section() {
   fi
   $LS -alR /boot  > ${LOGDIR}/system/ls-alR_boot.out 2>&1
   MakeDir ${LOGDIR}/boot/grub
-  MakeDir ${LOGDIR}/software
+  MakeDir ${LOGDIR}/patch+pkg
   MakeDir ${LOGDIR}/system
   for i in  /boot/grub/menu.lst  /boot/grub/grub.conf /boot/grub.conf /boot/grub/device.map ; do
     if [ -f ${i} ] ; then
@@ -863,7 +863,7 @@ boot_section() {
     fi
   done
   if [ -x "$CHKCONFIG" ] ; then
-    $CHKCONFIG --list > ${LOGDIR}/software/chkconfig_--list.out 2>&1
+    $CHKCONFIG --list > ${LOGDIR}/patch+pkg/chkconfig_--list.out 2>&1
   fi
   if [ -x "$SYSTEMCTL" ] ; then
     $SYSTEMCTL --full --no-pager    > ${LOGDIR}/sysconfig/systemctl_--full_--nopager
@@ -1392,38 +1392,38 @@ disk_dm_info() {
 rpm_info() {
   if [ -x "$RPM" ] ; then
     Echo "Section - rpm package information "
-    MakeDir ${LOGDIR}/software/rpm/rpm-packages
+    MakeDir ${LOGDIR}/patch+pkg/rpm/rpm-packages
     #
     # Short Description of all packages installed
     #
-    echo "Package_Name    Version   Size    Description"  > ${LOGDIR}/software/rpm/rpm-qa--queryformat.out
-    echo "===================================================================================" >> ${LOGDIR}/software/rpm/rpm-qa--queryformat.out
-    $RPM -qa --queryformat '%-25{NAME}  %-16{VERSION} %-10{RELEASE} %-10{DISTRIBUTION}  %-10{SIZE} %-10{INSTALLTIME:date} %{SUMMARY}\n' | sort >> ${LOGDIR}/software/rpm/rpm-qa--queryformat.out 2>&1
+    echo "Package_Name    Version   Size    Description"  > ${LOGDIR}/patch+pkg/rpm/rpm-qa--queryformat.out
+    echo "===================================================================================" >> ${LOGDIR}/patch+pkg/rpm/rpm-qa--queryformat.out
+    $RPM -qa --queryformat '%-25{NAME}  %-16{VERSION} %-10{RELEASE} %-10{DISTRIBUTION}  %-10{SIZE} %-10{INSTALLTIME:date} %{SUMMARY}\n' | sort >> ${LOGDIR}/patch+pkg/rpm/rpm-qa--queryformat.out 2>&1
     #
     # Long Description of all packages installed
     #
-    $RPM -qa > ${LOGDIR}/software/rpm/rpm_-qa 2>&1
-    $CAT ${LOGDIR}/software/rpm/rpm_-qa | while read line ; do
-      $RPM -qi  $line > ${LOGDIR}/software/rpm/rpm-packages/${line}.out  2>&1
+    $RPM -qa > ${LOGDIR}/patch+pkg/rpm/rpm_-qa 2>&1
+    $CAT ${LOGDIR}/patch+pkg/rpm/rpm_-qa | while read line ; do
+      $RPM -qi  $line > ${LOGDIR}/patch+pkg/rpm/rpm-packages/${line}.out  2>&1
       if [ $? -ne 0 ] ; then
         echo "ERROR: ${line} problem"
       fi
     done
     # print a list os installed packages sorted by install time:
-    $RPM -qa -last | tac > ${LOGDIR}/software/rpm/rpm_-qa_-last.out
+    $RPM -qa -last | tac > ${LOGDIR}/patch+pkg/rpm/rpm_-qa_-last.out
     #############################################################
     # If you enable verification then this then it's going to
     # take a some time to complete........
     #############################################################
     if [ ${FULLSOFT} -gt 0 ] ; then
-      $RPM -Va > ${LOGDIR}/software/rpm/rpm-Va.out  2>&1
+      $RPM -Va > ${LOGDIR}/patch+pkg/rpm/rpm-Va.out  2>&1
     fi
   fi
   if [ -f /usr/lib/rpm/rpmrc ] ; then
-    $CP -p /usr/lib/rpm/rpmrc  ${LOGDIR}/software/rpm/rpmrc
+    $CP -p /usr/lib/rpm/rpmrc  ${LOGDIR}/patch+pkg/rpm/rpmrc
   fi
   # Make a copy of the yum config files so that we can compare them
-  YUMDIR=${LOGDIR}/software/yum
+  YUMDIR=${LOGDIR}/patch+pkg/yum
   MakeDir ${YUMDIR}
   if [ -x "$YUM" ] ; then
     $YUM list installed       > ${YUMDIR}/yum_list_installed.out        2>&1
@@ -1449,10 +1449,10 @@ rpm_info() {
 pacman_info() {
   if [ -x "$PACMAN" ]  ; then
     Echo "Section - pacman Checks "
-    MakeDir ${LOGDIR}/software/packman
-    $PACMAN -qa   > ${LOGDIR}/software/packman/pacman_-qa  2>&1
-    $PACMAN -Qi   > ${LOGDIR}/software/packman/pacman_-Qi  2>&1
-    $PACMAN -Qdt  > ${LOGDIR}/software/packman/pacman_-Qdt 2>&1
+    MakeDir ${LOGDIR}/patch+pkg/packman
+    $PACMAN -qa   > ${LOGDIR}/patch+pkg/packman/pacman_-qa  2>&1
+    $PACMAN -Qi   > ${LOGDIR}/patch+pkg/packman/pacman_-Qi  2>&1
+    $PACMAN -Qdt  > ${LOGDIR}/patch+pkg/packman/pacman_-Qdt 2>&1
   fi
 }
 
@@ -1509,17 +1509,17 @@ deb_info() {
     if [ -f /var/lib/dpkg/status ] ; then
       $CP -p /var/lib/dpkg/status ${LOGDIR}/var/lib/dpkg/status
     fi
-    MakeDir ${LOGDIR}/software/dpkg
+    MakeDir ${LOGDIR}/patch+pkg/dpkg
     if [ -x "$DPKG" ] ; then
-       $DPKG  --list            > ${LOGDIR}/software/dpkg/dpkg_--list.out
-       $DPKG  -al           > ${LOGDIR}/software/dpkg/dpkg_-al.out
-       $DPKG  --get-selections  > ${LOGDIR}/software/dpkg/dpkg_-get-selections.out
+       $DPKG  --list            > ${LOGDIR}/patch+pkg/dpkg/dpkg_--list.out
+       $DPKG  -al           > ${LOGDIR}/patch+pkg/dpkg/dpkg_-al.out
+       $DPKG  --get-selections  > ${LOGDIR}/patch+pkg/dpkg/dpkg_-get-selections.out
     fi
     if [ -x "$DPKG_QUERY" ] ; then
-       $DPKG_QUERY -W     > ${LOGDIR}/software/dpkg/dpkg-query_-W.out
+       $DPKG_QUERY -W     > ${LOGDIR}/patch+pkg/dpkg/dpkg-query_-W.out
     fi
     if [ -x /usr/bin/apt-config ] ; then
-      /usr/bin/apt-config dump  > ${LOGDIR}/software/dpkg/apt-config_dump.out
+      /usr/bin/apt-config dump  > ${LOGDIR}/patch+pkg/dpkg/apt-config_dump.out
     fi
   fi
 }
@@ -1538,17 +1538,17 @@ deb_info() {
 suse_zypper_info() {
   if [ -x "$ZYPPER" ] ; then
     Echo "Section - Suse Zypper Info "
-    MakeDir ${LOGDIR}/software/zypper
-    $ZYPPER repos         > ${LOGDIR}/software/zypper/zypper_repos         2>&1
-    $ZYPPER locks         > ${LOGDIR}/software/zypper/zypper_locks         2>&1
-    $ZYPPER patches       > ${LOGDIR}/software/zypper/zypper_patches       2>&1
-    $ZYPPER packages      > ${LOGDIR}/software/zypper/zypper_packages      2>&1
-    $ZYPPER patterns      > ${LOGDIR}/software/zypper/zypper_patterns      2>&1
-    $ZYPPER products      > ${LOGDIR}/software/zypper/zypper_products      2>&1
-    $ZYPPER services      > ${LOGDIR}/software/zypper/zypper_services      2>&1
-    $ZYPPER licenses      > ${LOGDIR}/software/zypper/zypper_licenses      2>&1
-    $ZYPPER targetos      > ${LOGDIR}/software/zypper/zypper_targetos      2>&1
-    $ZYPPER list-updates  > ${LOGDIR}/software/zypper/zypper_list-updates  2>&1
+    MakeDir ${LOGDIR}/patch+pkg/zypper
+    $ZYPPER repos         > ${LOGDIR}/patch+pkg/zypper/zypper_repos         2>&1
+    $ZYPPER locks         > ${LOGDIR}/patch+pkg/zypper/zypper_locks         2>&1
+    $ZYPPER patches       > ${LOGDIR}/patch+pkg/zypper/zypper_patches       2>&1
+    $ZYPPER packages      > ${LOGDIR}/patch+pkg/zypper/zypper_packages      2>&1
+    $ZYPPER patterns      > ${LOGDIR}/patch+pkg/zypper/zypper_patterns      2>&1
+    $ZYPPER products      > ${LOGDIR}/patch+pkg/zypper/zypper_products      2>&1
+    $ZYPPER services      > ${LOGDIR}/patch+pkg/zypper/zypper_services      2>&1
+    $ZYPPER licenses      > ${LOGDIR}/patch+pkg/zypper/zypper_licenses      2>&1
+    $ZYPPER targetos      > ${LOGDIR}/patch+pkg/zypper/zypper_targetos      2>&1
+    $ZYPPER list-updates  > ${LOGDIR}/patch+pkg/zypper/zypper_list-updates  2>&1
   fi
 }
 
@@ -1565,8 +1565,8 @@ suse_zypper_info() {
 gentoo_pkgs_info() {
   if [ -d  /var/db/pkg  ] ; then
     Echo "Section - Gentoo Packages Info "
-    MakeDir ${LOGDIR}/software/gentoo
-    GENTOPKGS=${LOGDIR}/software/gentoo/gento_kgs.out
+    MakeDir ${LOGDIR}/patch+pkg/gentoo
+    GENTOPKGS=${LOGDIR}/patch+pkg/gentoo/gento_kgs.out
     ( find /var/db/pkg -type f -name environment.bz2 | while read x; do bzcat $x | \
       awk -F= '{
         if ($1 == "CATEGORY"){
@@ -1581,12 +1581,12 @@ gentoo_pkgs_info() {
       }' ; done
     ) >> $GENTOPKGS
     if [ -x $EQUERY ] ; then
-      $EQUERY list > ${LOGDIR}/software/gentoo/equery_list.out
+      $EQUERY list > ${LOGDIR}/patch+pkg/gentoo/equery_list.out
     fi
   fi
   #  Show the bootup info
   if [ -x $RC_UPDATE ] ; then
-    $RC_UPDATE show > ${LOGDIR}/software/gentoo/rc-update_show.out
+    $RC_UPDATE show > ${LOGDIR}/patch+pkg/gentoo/rc-update_show.out
   fi
 }
 
