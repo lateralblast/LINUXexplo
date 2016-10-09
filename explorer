@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         explorer
-# Version:      0.0.5
+# Version:      0.0.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -16,26 +16,31 @@
 #               Designed to be an expanded and modernised version of
 #               Linux Explorer by Joe Santoro of Unix Consultants
 
- MYVERSION="0.0.5"                                #
+ MYVERSION="0.0.6"                                #
    LICENSE="CC-BA"                                #
  COPYRIGHT="Richard Spindler"                     #
-    MYDATE="$(/bin/date +'%Y.%m.%d.%m.%H.%M')"    # Date and time now
+    MYDATE="$(date +'%Y.%m.%d.%m.%H.%M')"         # Date and time now
     MYNAME=$(basename $0)                         #
-    WHOAMI=$(/usr/bin/whoami)                     # The user running the script
-    HOSTID=$(/usr/bin/hostid)                     # The Hostid of this server
-MYHOSTNAME=$(/bin/uname -n)                       # The hostname of this server
+    WHOAMI=$(whoami)                              # The user running the script
+MYHOSTNAME=$(uname -n)                            # The hostname of this server
 MYSHORTNAME=$(echo $MYHOSTNAME | cut -f 1 -d'.')  #
    TMPFILE="/tmp/$(basename $0).$$"               # Temporary File
     TOPDIR="/var/explorer/output"                 # Top level output directory
  CHECKTYPE=""                                     # Nothing selected
      CWDIR=""                                     #
    VERBOSE=0                                      # Set to see the scripts progress used
-                                                  # only if connected  to a terminal session.
+    OSNAME=$(uname)                               # only if connected  to a terminal session.
   FULLSOFT=0                                      # Set to Verify Software installation
                                                   # this takes a very long time
 KEEPFILES="0"                                     # Default to remove files created by this script
  CODENAME="LINUXexplo"
 unset GZIP                                        # Ensure that GZIP is unset for later use.
+
+if [ "$OSNAME" == "Darwin" ]; then
+  HOSTID=$(netstat -I en0 |grep en0 | awk '{print $4}' |head -1)   
+else
+  HOSTID=$(/usr/bin/hostid)                      
+fi
 
 # Set the path for the script to run.
 

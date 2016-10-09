@@ -8,3 +8,5 @@
 # Directed hardware, disk and system output to locations similar to STB
 # 0.0.5: Mon 10 Oct 2016 09:10:06 AEDT
 # Directed software output to patch+pkg directory like STB
+# 0.0.6: Mon Oct 10 09:34:56 AEDT 2016
+# Cleaned up uname and hostid
