@@ -3,4 +3,6 @@
 # 0.0.2: Sat  8 Oct 2016 22:57:18 AEDT
 # Initial code cleanup
 # 0.0.3: Sun Oct  9 00:00:32 AEDT 2016
-# Started updating behavior to be more like recent versions of explorer
+# Started updating behavior to be more like recent versions of explorer (STB)
+# 0.0.4: Sun  9 Oct 2016 11:43:36 AEDT
+# Directed hardware, disk and system output to locations similar to STB
