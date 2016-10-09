@@ -6,3 +6,5 @@
 # Started updating behavior to be more like recent versions of explorer (STB)
 # 0.0.4: Sun  9 Oct 2016 11:43:36 AEDT
 # Directed hardware, disk and system output to locations similar to STB
+# 0.0.5: Mon 10 Oct 2016 09:10:06 AEDT
+# Directed software output to patch+pkg directory like STB
