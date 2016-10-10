@@ -14,3 +14,5 @@
 # Very basic Mac OS X support
 # 0.0.8: Mon 10 Oct 2016 13:31:51 AEDT
 # Substituted ioreg for lspci on OS X and added system_profiler output
+# 0.0.9: Mon 10 Oct 2016 13:40:03 AEDT
+# Fixed hostid on Mac OS X

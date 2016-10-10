@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         explorer
-# Version:      0.0.8
+# Version:      0.0.9
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -16,7 +16,7 @@
 #               Designed to be an expanded and modernised version of
 #               Linux Explorer by Joe Santoro of Unix Consultants
 
- MYVERSION="0.0.8"                                #
+ MYVERSION="0.0.9"                                #
    LICENSE="CC-BA"                                #
  COPYRIGHT="Richard Spindler"                     #
     MYDATE="$(date +'%Y.%m.%d.%m.%H.%M')"         # Date and time now
@@ -37,7 +37,7 @@ KEEPFILES="0"                                     # Default to remove files crea
 unset GZIP                                        # Ensure that GZIP is unset for later use.
 
 if [ "$OSNAME" == "Darwin" ] ; then
-  HOSTID=$(netstat -I en0 |grep en0 | awk '{print $4}' |head -1)   
+  HOSTID=$(netstat -I en0 |grep en0 | awk '{print $4}' |head -1 |sed "s/://g")   
 else
   HOSTID=$(/usr/bin/hostid)                      
 fi
