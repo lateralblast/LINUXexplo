@@ -10,3 +10,7 @@
 # Directed software output to patch+pkg directory like STB
 # 0.0.6: Mon Oct 10 09:34:56 AEDT 2016
 # Cleaned up uname and hostid
+# 0.0.7: Mon 10 Oct 2016 12:09:33 AEDT
+# Very basic Mac OS X support
+# 0.0.8: Mon 10 Oct 2016 13:31:51 AEDT
+# Substituted ioreg for lspci on OS X and added system_profiler output
