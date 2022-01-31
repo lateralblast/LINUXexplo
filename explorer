@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         explorer
-# Version:      0.0.9
+# Version:      0.1.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -506,6 +506,7 @@ findCmds() {
          SPACERPT=$(mywhich 'spacewalk-report'  )
              UNIQ=$(mywhich uniq                )
                WC=$(mywhich wc                  )
+            RSYNC=$(mywhich rsync               )
   # Selinux
          SESTATUS=$(mywhich sestatus            )
         GETSEBOOL=$(mywhich getsebool           )
@@ -1693,7 +1694,7 @@ rhn_info() {
 
 system_logs_info() {
   Echo "Section - Systems Log "
-  $CP -R -p /var/log/*  ${LOGDIR}/logs
+  $RSYNC -a /var/log/* ${LOGDIR}/logs
   $DMESG  > ${LOGDIR}/logs/dmesg.out
   $LAST   > ${LOGDIR}/logs/lastlog
   if [ -d /var/crash ] ; then
@@ -2141,7 +2142,7 @@ dovecot_info() {
     Echo "Section - Dovecot checks"
     DOVETOPDIR=${LOGDIR}/mail/dovecot
     MakeDir $DOVETOPTDIR
-    $DOVECOTE -a > ${LOGDIR}/mail/dovecot/dovecote_-a.out
+    $DOVECOT -a > ${LOGDIR}/mail/dovecot/dovecote_-a.out
   fi
 }
 
@@ -2524,7 +2525,7 @@ copy_etc() {
   Echo "Section - Copy etc"
   if [ ! -d "${LOGDIR}/etc" ]; then
     MakeDir "${LOGDIR}/etc"
-    $CP -Rp /etc/*   ${LOGDIR}/etc/
+    $RSYNC -a /etc/* ${LOGDIR}/etc/
     if [ -f ${LOGDIR}/etc/shadow ] ; then
       $RM -f ${LOGDIR}/etc/shadow
     fi

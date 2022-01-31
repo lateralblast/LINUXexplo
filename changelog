@@ -16,3 +16,5 @@
 # Substituted ioreg for lspci on OS X and added system_profiler output
 # 0.0.9: Mon 10 Oct 2016 13:40:03 AEDT
 # Fixed hostid on Mac OS X
+# 0.1.0: Mon 31 Jan 2022 13:31:44 AEDT
+# Fixes for cp/rsync and dovecot form Mark Lane
