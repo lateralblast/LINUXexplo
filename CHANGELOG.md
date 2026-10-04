@@ -3,6 +3,20 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.9] - 2026-10-04
+
+### Added
+- `-t backup` collection type, and NetBackup collection is now part of `all`; it was previously never called
+
+### Fixed
+- NetBackup tools are looked up in `bin`, `bin/admincmd` and `/usr/openv/volmgr/bin` rather than the top-level netbackup directory
+
+## [0.3.8] - 2026-10-04
+
+### Fixed
+- `kernel_info` was never called. It now runs as part of `hardware` (and so `all`), collecting sysctl, uname, runlevel, slabtop, module and kernel config details
+- Skip kernel tools that are not installed and create the output directories `kernel_info` needs
+
 ## [0.3.7] - 2026-10-04
 
 ### Changed

@@ -67,9 +67,10 @@ Collection types
 | Type | Contents |
 |------|----------|
 | `configs` | Boot loader configuration and boot services |
+| `backup` | NetBackup configuration, policies, media and recent errors (when NetBackup is installed) |
 | `clusters` | Red Hat Cluster, Veritas Cluster and Pacemaker details |
 | `disks` | Disks, partitions, Btrfs, LVM, ZFS, filesystems, RAID, device mapper, NFS, EMC PowerPath, NetApp and Veritas Volume Manager |
-| `hardware` | Hardware, CPU, memory and PCI details, plus `disks` and `network` |
+| `hardware` | Hardware, CPU, memory, PCI and kernel (sysctl, modules, config) details, plus `disks` and `network` |
 | `logs` | System logs, SELinux and `/proc` and `/sys` information |
 | `network` | Interfaces, iptables, ipchains, ethtool and NIS (YP) |
 | `software` | RPM, DEB, pacman, zypper, Gentoo, Spacewalk/RHN, Samba and Apache |
@@ -91,14 +92,14 @@ both to your support representative.
 
 Inside the tree, output files are named after the command that produced them
 (for example `disks/fdisk_-l_sda.out`). Common directories are `boot`,
-`disks`, `etc`, `logs`, `mail`, `networks`, `patch+pkg`, `sysconfig`,
+`disks`, `etc`, `kernel`, `logs`, `mail`, `networks`, `patch+pkg`, `sysconfig`,
 `system`, `var` and `virtual`. Commands that could not be found are listed in
 `command_not_found.out`.
 
 Version
 -------
 
-Current version: **0.3.7** (see [CHANGELOG.md](CHANGELOG.md))
+Current version: **0.3.9** (see [CHANGELOG.md](CHANGELOG.md))
 
 Help Support Development
 ------------------------
