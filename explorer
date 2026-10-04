@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Name:         explorer
-# Version:      0.1.0
+# Version:      0.3.7
 # Release:      1
-# License:      CC-BA (Creative Commons By Attribution)
-#               http://creativecommons.org/licenses/by/4.0/legalcode
+# License:      CC-BY-NC-SA (Creative Commons Attribution-NonCommercial-ShareAlike)
+#               https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 # Group:        System
 # Source:       N/A
 # URL:          http://lateralblast.com.au/
@@ -16,15 +16,15 @@
 #               Designed to be an expanded and modernised version of
 #               Linux Explorer by Joe Santoro of Unix Consultants
 
- MYVERSION="0.0.9"                                #
-   LICENSE="CC-BA"                                #
+ MYVERSION="0.3.7"                                #
+   LICENSE="CC-BY-NC-SA"                              #
  COPYRIGHT="Richard Spindler"                     #
-    MYDATE="$(date +'%Y.%m.%d.%m.%H.%M')"         # Date and time now
-    MYNAME=$(basename $0)                         #
+    MYDATE="$(date +'%Y.%m.%d.%H.%M')"         # Date and time now
+    MYNAME=$(basename "$0")                         #
     WHOAMI=$(whoami)                              # The user running the script
 MYHOSTNAME=$(uname -n)                            # The hostname of this server
-MYSHORTNAME=$(echo $MYHOSTNAME | cut -f 1 -d'.')  #
-   TMPFILE="/tmp/$(basename $0).$$"               # Temporary File
+MYSHORTNAME=$(echo "$MYHOSTNAME" | cut -f 1 -d'.')  #
+   TMPFILE="/tmp/$(basename "$0").$$"               # Temporary File
     TOPDIR="/var/explorer/output"                 # Top level output directory
  CHECKTYPE=""                                     # Nothing selected
      CWDIR=""                                     #
@@ -62,26 +62,43 @@ EXPLCFGDIR=/etc/explorer/default
 spinningCursor() {
   case $toggle in
     1)
-      echo -n $1" [ \ ]"
+      echo -n "$1"" [ \ ]"
       echo -ne "\r"
       toggle="2"
       ;;
     2)
-      echo -n $1" [ | ]"
+      echo -n "$1"" [ | ]"
       echo -ne "\r"
       toggle="3"
       ;;
     3)
-      echo -n $1" [ / ]"
+      echo -n "$1"" [ / ]"
       echo -ne "\r"
       toggle="4"
       ;;
     *)
-      echo -n $1" [ - ]"
+      echo -n "$1"" [ - ]"
       echo -ne "\r"
       toggle="1"
       ;;
   esac
+}
+
+##############################################################################
+#
+#      Function : CopyTree
+#    Parameters : Sources followed by destination
+#        Output : None
+#         Notes : Copy with rsync if available, otherwise fall back to cp
+#
+##############################################################################
+
+CopyTree() {
+  if [ -x "$RSYNC" ] ; then
+    $RSYNC -a "$@"
+  else
+    $CP -a "$@"
+  fi
 }
 
 ##############################################################################
@@ -95,14 +112,13 @@ spinningCursor() {
 
 MakeDir() {
   myDir="$1"
-  if [ ! -d $myDir ] ; then
-    $MKDIR -p $myDir
-    if [ $? -ne 0 ] ; then
+  if [ ! -d "$myDir" ] ; then
+    if ! $MKDIR -p "$myDir" ; then
       echo "ERROR: Creating directory $LOGDIR"
       exit 1
     fi
   else
-    $CHMOD 750 $myDir
+    $CHMOD 750 "$myDir"
   fi
 }
 
@@ -129,7 +145,7 @@ config_functions() {
 ##############################################################################
 
 cluster_functions() {
-  MakeDir ${LOGDIR}/clusters
+  MakeDir "${LOGDIR}"/clusters
   redhat_cluster_info
   veritas_cluster_info
   pacemake_cluster_info
@@ -146,8 +162,8 @@ cluster_functions() {
 ##############################################################################
 
 disk_functions() {
-  MakeDir ${LOGDIR}/disks
-  MakeDir ${LOGDIR}/disks/raid
+  MakeDir "${LOGDIR}"/disks
+  MakeDir "${LOGDIR}"/disks/raid
   disk_info
   brtfs_info
   lvm_info
@@ -199,7 +215,7 @@ hardware_functions() {
 ##############################################################################
 
 log_functions() {
-  MakeDir ${LOGDIR}/logs
+  MakeDir "${LOGDIR}"/logs
   selinux_info
   system_logs_info
   proc_sys_info
@@ -215,7 +231,7 @@ log_functions() {
 ##############################################################################
 
 network_functions() {
-  MakeDir ${LOGDIR}/networks
+  MakeDir "${LOGDIR}"/networks
   network_info
   iptables_info
   ipchains_info
@@ -233,7 +249,7 @@ network_functions() {
 ##############################################################################
 
 software_functions() {
-  MakeDir ${LOGDIR}/patch+pkg
+  MakeDir "${LOGDIR}"/patch+pkg
   rpm_info
   deb_info
   pacman_info
@@ -255,7 +271,7 @@ software_functions() {
 ##############################################################################
 
 virt_functions() {
-  MakeDir ${LOGDIR}/virtual
+  MakeDir "${LOGDIR}"/virtual
   VIRT=${LOGDIR}/virtual
   xen_info
   libvirt_info
@@ -273,17 +289,17 @@ virt_functions() {
 
 general_functions() {
   # Create the default directories I'm going to use.
-  MakeDir ${LOGDIR}/boot
-  MakeDir ${LOGDIR}/clusters
-  MakeDir ${LOGDIR}/etc
-  MakeDir ${LOGDIR}/disks
-  MakeDir ${LOGDIR}/lp
-  MakeDir ${LOGDIR}/logs
-  MakeDir ${LOGDIR}/mail
-  MakeDir ${LOGDIR}/system
-  MakeDir ${LOGDIR}/patch+pkg
-  MakeDir ${LOGDIR}/var
-  MakeDir ${LOGDIR}/virtual
+  MakeDir "${LOGDIR}"/boot
+  MakeDir "${LOGDIR}"/clusters
+  MakeDir "${LOGDIR}"/etc
+  MakeDir "${LOGDIR}"/disks
+  MakeDir "${LOGDIR}"/lp
+  MakeDir "${LOGDIR}"/logs
+  MakeDir "${LOGDIR}"/mail
+  MakeDir "${LOGDIR}"/system
+  MakeDir "${LOGDIR}"/patch+pkg
+  MakeDir "${LOGDIR}"/var
+  MakeDir "${LOGDIR}"/virtual
   system_logs_info
   printing_info
   postfix_info
@@ -315,7 +331,7 @@ myselection() {
       Echo "You have selected \"configs\" "
       config_functions
       ;;
-  clusters)
+  cluster|clusters)
       Echo "You have selected \"clusters\" "
       cluster_functions
       ;;
@@ -344,7 +360,7 @@ myselection() {
       virt_functions
       ;;
   general)
-      Echo "You have selected \"virtualization\" "
+      Echo "You have selected \"general\" "
       general_functions
       ;;
   all|*)
@@ -378,7 +394,7 @@ ShowUsage() {
   echo "    -d      Target directory for explorer files"
   echo "    -g      Create explorer config"
   echo "    -k      Keep files created by this script"
-  echo "    -t      [hardware] [software] [configs] [cluster] [all] [disks] [network]"
+  echo "    -t      [hardware] [software] [configs] [clusters] [logs] [virtualization] [general] [all] [disks] [network]"
   echo "    -v      Verbose output"
   echo "    -s      Verify Package Installation"
   echo "    -h      This help message"
@@ -404,7 +420,7 @@ Echo() {
     fi
     if [ ${VERBOSE} -gt 1 ] ; then
       echo "Press Return to Continue.........."
-      read A
+      read -r A
     fi
   fi
 }
@@ -425,14 +441,13 @@ mywhich() {
   if [  "$command" =  "" ] ; then
     return
   fi
-  local mypath=$(which $command 2>/dev/null)
+  local mypath
+  mypath=$(type -P "$command" 2>/dev/null)
   if [  "$mypath" =  "" ] ; then
-    echo "Command $command not found" >> $NOTFNDLOG
-    echo $1
-    exit
+    echo "Command $command not found" >> "$NOTFNDLOG"
     echo "NOT_FOUND"
   elif [ ! -x "$mypath" ] ; then
-    echo "Command $command not executable" >> $NOTFNDLOG
+    echo "Command $command not executable" >> "$NOTFNDLOG"
     echo "NOT_FOUND"
   else
     echo "$mypath"
@@ -459,11 +474,9 @@ findCmds() {
   fi
   # Standard commands
               AWK=$(mywhich awk                 )
-         BASENAME=$(mywhich basename            )
               CAT=$(mywhich cat                 )
         CHKCONFIG=$(mywhich chkconfig           )
                CP=$(mywhich cp                  )
-              CUT=$(mywhich cut                 )
             CHMOD=$(mywhich chmod               )
            COLUMN=$(mywhich column              )
              DATE=$(mywhich date                )
@@ -471,36 +484,24 @@ findCmds() {
             DMESG=$(mywhich dmesg               )
              ECHO=$(mywhich echo                )
            EQUERY=$(mywhich equery              )
-             FILE=$(mywhich file                )
              FIND=$(mywhich find                )
              FREE=$(mywhich free                )
              GREP=$(mywhich grep                )
-              GPG=$(mywhich gpg                 )
-            EGREP=$(mywhich egrep               )
        JOURNALCTL=$(mywhich journalctl          )
                LS=$(mywhich ls                  )
            LOGGER=$(mywhich logger              )
       LSB_RELEASE=$(mywhich lsb_release         )
-               LN=$(mywhich ln                  )
             MKDIR=$(mywhich mkdir               )
              LAST=$(mywhich last                )
-           LOCALE=$(mywhich locale              )
            PSTREE=$(mywhich pstree              )
                PS=$(mywhich ps                  )
                RM=$(mywhich rm                  )
-            SLEEP=$(mywhich sleep               )
         SYSTEMCTL=$(mywhich systemctl           )
             MOUNT=$(mywhich mount               )
-               MV=$(mywhich mv                  )
-              SAR=$(mywhich sar                 )
              SORT=$(mywhich sort                )
-             TAIL=$(mywhich tail                )
             UNAME=$(mywhich uname               )
            UPTIME=$(mywhich uptime              )
               WHO=$(mywhich who                 )
-              ZIP=$(mywhich zip                 )
-             GZIP=$(mywhich gzip                )
-             GAWK=$(mywhich gawk                )
               SED=$(mywhich sed                 )
            GUNZIP=$(mywhich gunzip              )
          SPACERPT=$(mywhich 'spacewalk-report'  )
@@ -529,12 +530,10 @@ findCmds() {
         APACHECTL=$(mywhich apachectl           )
        APACHE2CTL=$(mywhich apache2ctl          )
   # Packages
-        APTCONFIG=$(mywhich apt-config          )
               RPM=$(mywhich rpm                 )
            ZYPPER=$(mywhich zypper              )
              DPKG=$(mywhich dpkg                )
        DPKG_QUERY=$(mywhich dpkg-query          )
-           EMERGE=$(mywhich emerge              )
               YUM=$(mywhich yum                 )
            PACMAN=$(mywhich pacman              )
   # Kernel Info
@@ -555,10 +554,8 @@ findCmds() {
           HWCLOCK=$(mywhich hwclock             )
             LSMOD=$(mywhich lsmod               )
             LSPCI=$(mywhich lspci               )
-            LSPNP=$(mywhich lspnp               )
             LSBLK=$(mywhich lsblk               )
            LSSCSI=$(mywhich lsscsi              )
-          IPVSADM=$(mywhich ipvsadm             )
             LSUSB=$(mywhich lsusb               )
             LSDEV=$(mywhich lsdev               )
             LSHAL=$(mywhich lshal               )
@@ -568,7 +565,6 @@ findCmds() {
           POWERMT=$(mywhich powermt             )
          SMARTCTL=$(mywhich smartctl            )
            SFDISK=$(mywhich sfdisk              )
-           HWPARM=$(mywhich hwparm              )
           SCSI_ID=$(mywhich scsi_id             )
          ISCSIADM=$(mywhich iscsiadm            )
         MULTIPATH=$(mywhich multipath           )
@@ -585,7 +581,6 @@ findCmds() {
            SANLUN=$SAN_UTIL_DIR/$SAN_UTIL_PROG
   # Disks
             BTRFS=$(mywhich btrfs               )
-    DEBUGREISERFS=$(mywhich debugreiserfs       )
          EXPORTFS=$(mywhich exportfs            )
            HDPARM=$(mywhich hdparm              )
               LVM=$(mywhich lvm                 )
@@ -596,7 +591,6 @@ findCmds() {
            VGSCAN=$(mywhich vgscan              )
         VGDISPLAY=$(mywhich vgdisplay           )
            PVSCAN=$(mywhich pvscan              )
-              PVS=$(mywhich pvs                 )
          REPQUOTA=$(mywhich repquota            )
           TUNE2FS=$(mywhich tune2fs             )
   # ZFS
@@ -607,7 +601,6 @@ findCmds() {
              VXDG=$(mywhich vxdg                )
            VXDISK=$(mywhich vxdisk              )
           VXPRINT=$(mywhich vxprint             )
-         VXLICREP=$(mywhich vxlicrep            )
   # Veritas Cluster
          HASTATUS=$(mywhich hastatus            )
             HARES=$(mywhich hares               )
@@ -642,7 +635,6 @@ findCmds() {
             BRCTL=$(mywhich brctl               )
               ARP=$(mywhich arp                 )
   # Tuning
-           IOSTAT=$(mywhich iostat              )
              IPCS=$(mywhich ipcs                )
          MODPROBE=$(mywhich modprobe            )
            DEPMOD=$(mywhich depmod              )
@@ -652,7 +644,6 @@ findCmds() {
          RUNLEVEL=$(mywhich runlevel            )
              LSOF=$(mywhich lsof                )
               TAR=$(mywhich tar                 )
-           XVINFO=$(mywhich xvinfo              )
          POSTCONF=$(mywhich postconf            )
   # Virtual Server
                XM=$(mywhich xm                  )
@@ -682,7 +673,7 @@ findCmds() {
 
 proc_sys_info() {
   Echo "Section - Collecting /proc and /sys Info"
-  MakeDir ${LOGDIR}/proc
+  MakeDir "${LOGDIR}"/proc
   $FIND /proc -type f -print 2>/dev/null | \
     $GREP -v "/proc/kcore"    | \
     $GREP -v "/proc/bus/usb"  | \
@@ -693,23 +684,23 @@ proc_sys_info() {
     $GREP -v "kpagecount"  | \
     $GREP -v "kpageflags"  | \
     $GREP -v "use-gss-proxy"  | \
-    $GREP -v "/proc/kmsg" > $TMPFILE
-  for i in $($CAT $TMPFILE) ; do
-    Dirname=$(dirname $i)
-    Filename=$(basename $i)
-    MakeDir ${LOGDIR}${Dirname}
+    $GREP -v "/proc/kmsg" > "$TMPFILE"
+  for i in $($CAT "$TMPFILE") ; do
+    Dirname=$(dirname "$i")
+    Filename=$(basename "$i")
+    MakeDir "${LOGDIR}""${Dirname}"
     if [ -e "$i" ] ; then
       if [[ -t 0 && ${VERBOSE} -ne 0 ]] ; then
         spinningCursor
       fi
-      $CAT "$i" > ${LOGDIR}${Dirname}/${Filename}  2>&1
+      $CAT "$i" > "${LOGDIR}""${Dirname}"/"${Filename}"  2>&1
     fi
     if [[ -t 0 && ${VERBOSE} -ne 0 ]] ; then
       spinningCursor
     fi
   done
   echo
-  $RM -f $TMPFILE
+  $RM -f "$TMPFILE"
 }
 
 ##############################################################################
@@ -725,30 +716,30 @@ netbackup() {
   Echo "Section - Netbackup "
   # Basic Netbackup collection
   NETBACKUPDIR="/usr/openv/netbackup"
-  if [ ! -d $NETBACKUPDIR ] ; then
+  if [ -d $NETBACKUPDIR ] ; then
     NBACKUPDIR=${LOGDIR}/backups/netbackup
-    MakeDir $NBACKUPDIR
+    MakeDir "$NBACKUPDIR"
   else
     return
   fi
   PATH=$PATH:$NETBACKUPDIR
   export PATH
-  bpstulist -L  >> $NBACKUPDIR/bpstulist_-L.out
-  bppllist       > $NBACKUPDIR/bppllist.out
-  cat  $NBACKUPDIR/bppllist.out | while read line ; do
-    bppllist $line  -U > $NBACKUPDIR/bppllist_${line}_-U.out
+  bpstulist -L  >> "$NBACKUPDIR"/bpstulist_-L.out
+  bppllist       > "$NBACKUPDIR"/bppllist.out
+  cat  "$NBACKUPDIR"/bppllist.out | while read -r line ; do
+    bppllist "$line"  -U > "$NBACKUPDIR"/bppllist_"${line}"_-U.out
   done
-  bpps -a                           > $NBACKUPDIR/bpps_-a.out
-  bpconfig -l                       > $NBACKUPDIR/bpconfig_-l.out
-  bpconfig -L                       > $NBACKUPDIR/bpconfig_-L.out
-  vmquery -a                        > $NBACKUPDIR/vmquery_-a.out
-  tpconfig -d                       > $NBACKUPDIR/tpconfig_-d.out
-  bpmedia                           > $NBACKUPDIR/bpmedia.out
-  bpmedialist                       > $NBACKUPDIR/bpmedialist.out
-  available_media                   > $NBACKUPDIR/available_media.out
-  bperror -U -backstat -hoursago 48 > $NBACKUPDIR/bperror_-U_-backstat_-hoursago_48.out
-  MakeDir $NBackupDir/configs
-  cp /usr/openv/netbackup/*.conf $NBACKUPDIR/configs
+  bpps -a                           > "$NBACKUPDIR"/bpps_-a.out
+  bpconfig -l                       > "$NBACKUPDIR"/bpconfig_-l.out
+  bpconfig -L                       > "$NBACKUPDIR"/bpconfig_-L.out
+  vmquery -a                        > "$NBACKUPDIR"/vmquery_-a.out
+  tpconfig -d                       > "$NBACKUPDIR"/tpconfig_-d.out
+  bpmedia                           > "$NBACKUPDIR"/bpmedia.out
+  bpmedialist                       > "$NBACKUPDIR"/bpmedialist.out
+  available_media                   > "$NBACKUPDIR"/available_media.out
+  bperror -U -backstat -hoursago 48 > "$NBACKUPDIR"/bperror_-U_-backstat_-hoursago_48.out
+  MakeDir "$NBACKUPDIR"/configs
+  cp /usr/openv/netbackup/*.conf "$NBACKUPDIR"/configs
 }
 
 ##############################################################################
@@ -762,113 +753,115 @@ netbackup() {
 
 hardware_checks() {
   Echo "Section - Hardware Info"
-  if [ -x $IOREG ] ; then
-    $IOREG -ailtf                 > ${LOGDIR}/sysconfig/ioreg_-ailtf.out          2>&1
-    $IOREG -iltf                  > ${LOGDIR}/sysconfig/ioreg_-iltf.out           2>&1
+  if [ -x "$IOREG" ] ; then
+    $IOREG -ailtf                 > "${LOGDIR}"/sysconfig/ioreg_-ailtf.out          2>&1
+    $IOREG -iltf                  > "${LOGDIR}"/sysconfig/ioreg_-iltf.out           2>&1
   fi
-  if [ -x $SYSTEM_PROFILER ] ; then
-    $SYSTEM_PROFILER              > ${LOGDIR}/sysconfig/system_profiler.out       2>&1
+  if [ -x "$SYSTEM_PROFILER" ] ; then
+    $SYSTEM_PROFILER              > "${LOGDIR}"/sysconfig/system_profiler.out       2>&1
   fi
   if [ "$OSNAME" == "Darwin" ] ; then
-    $SYSCTL machdep.cpu           > ${LOGDIR}/sysconfig/proc_cpuinfo.out          2>&1
-    $SYSCTL machdep.memmap        > ${LOGDIR}/sysconfig/proc_meminfo.out          2>&1
-    $SYSCTL vfs                   > ${LOGDIR}/sysconfig/proc_filesystems.out      2>&1
-    $FDISK -a hfs /dev/rdisk0     > ${LOGDIR}/sysconfig/proc_partitions.out       2>&1
+    $SYSCTL machdep.cpu           > "${LOGDIR}"/sysconfig/proc_cpuinfo.out          2>&1
+    $SYSCTL machdep.memmap        > "${LOGDIR}"/sysconfig/proc_meminfo.out          2>&1
+    $SYSCTL vfs                   > "${LOGDIR}"/sysconfig/proc_filesystems.out      2>&1
+    $FDISK -a hfs /dev/rdisk0     > "${LOGDIR}"/sysconfig/proc_partitions.out       2>&1
      physicalCPUs=$( $SYSCTL machdep.cpu.brand_string | $WC -l                    )
          cpuCores=$( $SYSCTL machdep.cpu.core_count | $AWK '{print $2}'           )
-    cpuProcessors=$( $SYSCTL sysctl machdep.cpu.thread_count | $AWK '{print $2}'  )
+    cpuProcessors=$( $SYSCTL machdep.cpu.thread_count | $AWK '{print $2}'  )
   else
-    if [ -x $CARDCTL ] ; then
-      $CARDCTL info     > ${LOGDIR}/sysconfig/cardctl-info.out 2>&1
-      $CARDCTL status   > ${LOGDIR}/sysconfig/cardctl-status.out 2>&1
+    if [ -x "$CARDCTL" ] ; then
+      $CARDCTL info     > "${LOGDIR}"/sysconfig/cardctl-info.out 2>&1
+      $CARDCTL status   > "${LOGDIR}"/sysconfig/cardctl-status.out 2>&1
       # $CARDCTL ident    > ${LOGDIR}/sysconfig/cardctl-ident.out 2>&1
     fi
-    if [ -x $LSPCI ] ; then
-      $LSPCI          > ${LOGDIR}/sysconfig/lspci.out     2>&1
-      $LSPCI -n       > ${LOGDIR}/sysconfig/lspci-n.out   2>&1
-      $LSPCI -knn     > ${LOGDIR}/sysconfig/lspci-knn.out 2>&1
-      $LSPCI  | while read line ; do
-        Bus=$(/bin/echo $line 2>/dev/null | awk '{ print $1 }')
-        $LSPCI -vv -s $Bus > ${LOGDIR}/sysconfig/lspci_-vv_-s_${Bus}.out 2>&1
+    if [ -x "$LSPCI" ] ; then
+      $LSPCI          > "${LOGDIR}"/sysconfig/lspci.out     2>&1
+      $LSPCI -n       > "${LOGDIR}"/sysconfig/lspci-n.out   2>&1
+      $LSPCI -knn     > "${LOGDIR}"/sysconfig/lspci-knn.out 2>&1
+      $LSPCI  | while read -r line ; do
+        Bus=$(/bin/echo "$line" 2>/dev/null | awk '{ print $1 }')
+        $LSPCI -vv -s "$Bus" > "${LOGDIR}"/sysconfig/lspci_-vv_-s_"${Bus}".out 2>&1
       done
     fi
     # Get the port names from the HDA cards
-    for i in /sys/class/scsi_host/host*/device/fc_host\:host*/port_name ; do
-      if [ -f $i ] ; then
-        name=$( echo $i | sed 's/\//_/g' | sed 's/^_//g')
-        echo "Port Name : $(cat $i )" >> ${LOGDIR}/sysconfig/cat_${name}.out 2>&1
+    for i in /sys/class/scsi_host/host*/device/fc_host:host*/port_name ; do
+      if [ -f "$i" ] ; then
+        name=$( echo "$i" | sed 's/\//_/g' | sed 's/^_//g')
+        echo "Port Name : $(cat "$i" )" >> "${LOGDIR}"/sysconfig/cat_"${name}".out 2>&1
       fi
     done
     # Get a listing of the /dev directory
-    MakeDir ${LOGDIR}/dev
-    $LS -laR /dev  > ${LOGDIR}/dev/ls_-laR_dev.out
+    MakeDir "${LOGDIR}"/dev
+    $LS -laR /dev  > "${LOGDIR}"/dev/ls_-laR_dev.out
     if [ -x "$LSUSB" ] ; then
-      $LSUSB -xv > ${LOGDIR}/sysconfig/lsusb_-xv.out 2>&1
-      $LSUSB -tv > ${LOGDIR}/sysconfig/lsusb_-tv.out 2>&1
+      $LSUSB -xv > "${LOGDIR}"/sysconfig/lsusb_-xv.out 2>&1
+      $LSUSB -tv > "${LOGDIR}"/sysconfig/lsusb_-tv.out 2>&1
     fi
     if [ -x "$LSDEV" ] ; then
-      $LSDEV -type adaptor > ${LOGDIR}/sysconfig/lsdev_-type_adaptor.out 2>&1
+      $LSDEV -type adaptor > "${LOGDIR}"/sysconfig/lsdev_-type_adaptor.out 2>&1
     fi
     if [ -x "$ACPI" ] ; then
-      $ACPI -V > ${LOGDIR}/sysconfig/acpi-V.out 2>&1
+      $ACPI -V > "${LOGDIR}"/sysconfig/acpi-V.out 2>&1
     fi
-    if [ -x $FREE ] ; then
-      $FREE    > ${LOGDIR}/sysconfig/free.out
-      $FREE -k > ${LOGDIR}/sysconfig/free_-k.out
+    if [ -x "$FREE" ] ; then
+      $FREE    > "${LOGDIR}"/sysconfig/free.out
+      $FREE -k > "${LOGDIR}"/sysconfig/free_-k.out
     fi
-    $LS -laR /dev > ${LOGDIR}/sysconfig/ls-laR_dev.out
+    $LS -laR /dev > "${LOGDIR}"/sysconfig/ls-laR_dev.out
     if [ -d /udev ] ; then
-      $LS -laR /udev > ${LOGDIR}/sysconfig/ls-laR_udev.out
+      $LS -laR /udev > "${LOGDIR}"/sysconfig/ls-laR_udev.out
     fi
     # Global Devices list
     if [ -x "$LSHAL" ] ; then
-      $LSHAL  > ${LOGDIR}/sysconfig/lshal.out
+      $LSHAL  > "${LOGDIR}"/sysconfig/lshal.out
     fi
     if [ -x /usr/share/rhn/up2date_client/hardware.py ] ; then
-      /usr/share/rhn/up2date_client/hardware.py > ${LOGDIR}/sysconfig/hardware.py.out 2>&1
+      /usr/share/rhn/up2date_client/hardware.py > "${LOGDIR}"/sysconfig/hardware.py.out 2>&1
     fi
     if [ -x "$SMARTCTL" ] ; then
       for device in $( $LS /dev/[a-z]d[a-z] /dev/st[0-9] /dev/sg[0-9]  2> /dev/null) ; do
-        name=$( echo $device | sed 's/\//_/g' )
-        ${SMARTCTL} -a $device 2>/dev/null 1> ${LOGDIR}/sysconfig/smartctl-a_${name}.out
+        name=$( echo "$device" | sed 's/\//_/g' )
+        ${SMARTCTL} -a "$device" 2>/dev/null 1> "${LOGDIR}"/sysconfig/smartctl-a_"${name}".out
       done
     fi
     ##############################################################################
     # Collect Hardware information from the hwinfo program if installed
     ##############################################################################
-    if [ -x $HWINFO ] ; then
-      $HWINFO                       > ${LOGDIR}/sysconfig/hwinfo.out                 2>&1
-      $HWINFO  --isapnp             > ${LOGDIR}/sysconfig/hwinfo_--isapnp.out        2>&1
-      $HWINFO  --scsi               > ${LOGDIR}/sysconfig/hwinfo_--scsi.out          2>&1
-      $HWINFO  --framebuffer        > ${LOGDIR}/sysconfig/hwinfo_--framebuffer.out   2>&1
+    if [ -x "$HWINFO" ] ; then
+      $HWINFO                       > "${LOGDIR}"/sysconfig/hwinfo.out                 2>&1
+      $HWINFO  --isapnp             > "${LOGDIR}"/sysconfig/hwinfo_--isapnp.out        2>&1
+      $HWINFO  --scsi               > "${LOGDIR}"/sysconfig/hwinfo_--scsi.out          2>&1
+      $HWINFO  --framebuffer        > "${LOGDIR}"/sysconfig/hwinfo_--framebuffer.out   2>&1
     fi
     if [ -x "$PROCINFO"  ] ; then
-      $PROCINFO  > ${LOGDIR}/sysconfig/procinfo.out 2>&1
+      $PROCINFO  > "${LOGDIR}"/sysconfig/procinfo.out 2>&1
     fi
     if [ -x "$DMIDECODE" ] ; then
-      $DMIDECODE  > ${LOGDIR}/sysconfig/dmidecode.out 2>&1
+      $DMIDECODE  > "${LOGDIR}"/sysconfig/dmidecode.out 2>&1
     fi
-    if [ -x $LSHW  ] ; then
-      $LSHW > ${LOGDIR}/sysconfig/lshw.out 2>&1
+    if [ -x "$LSHW"  ] ; then
+      $LSHW > "${LOGDIR}"/sysconfig/lshw.out 2>&1
     fi
-    $CAT /proc/cpuinfo            > ${LOGDIR}/sysconfig/proc_cpuinfo.out          2>&1
-    $CAT /proc/meminfo            > ${LOGDIR}/sysconfig/proc_meminfo.out          2>&1
-    $CAT /proc/mdstat             > ${LOGDIR}/sysconfig/proc_mdstat.out           2>&1
-    $CAT /proc/interrupts         > ${LOGDIR}/sysconfig/proc_interrupts.out       2>&1
-    $CAT /proc/filesystem         > ${LOGDIR}/sysconfig/proc_filesystems.out      2>&1
-    $CAT /proc/devices            > ${LOGDIR}/sysconfig/proc_devices.out          2>&1
-    $CAT /proc/iomem              > ${LOGDIR}/sysconfig/proc_iomem.out            2>&1
-    $CAT /proc/ioports            > ${LOGDIR}/sysconfig/proc_ioports.out          2>&1
-    $CAT /proc/partitions         > ${LOGDIR}/sysconfig/proc_partitions.out       2>&1
-    $CAT /proc/slabinfo           > ${LOGDIR}/sysconfig/proc_slabinfo.out         2>&1
-    $CAT /proc/softirqs           > ${LOGDIR}/sysconfig/proc_softirqs.out         2>&1
+    $CAT /proc/cpuinfo            > "${LOGDIR}"/sysconfig/proc_cpuinfo.out          2>&1
+    $CAT /proc/meminfo            > "${LOGDIR}"/sysconfig/proc_meminfo.out          2>&1
+    $CAT /proc/mdstat             > "${LOGDIR}"/sysconfig/proc_mdstat.out           2>&1
+    $CAT /proc/interrupts         > "${LOGDIR}"/sysconfig/proc_interrupts.out       2>&1
+    $CAT /proc/filesystems         > "${LOGDIR}"/sysconfig/proc_filesystems.out      2>&1
+    $CAT /proc/devices            > "${LOGDIR}"/sysconfig/proc_devices.out          2>&1
+    $CAT /proc/iomem              > "${LOGDIR}"/sysconfig/proc_iomem.out            2>&1
+    $CAT /proc/ioports            > "${LOGDIR}"/sysconfig/proc_ioports.out          2>&1
+    $CAT /proc/partitions         > "${LOGDIR}"/sysconfig/proc_partitions.out       2>&1
+    $CAT /proc/slabinfo           > "${LOGDIR}"/sysconfig/proc_slabinfo.out         2>&1
+    $CAT /proc/softirqs           > "${LOGDIR}"/sysconfig/proc_softirqs.out         2>&1
      physicalCPUs=$( $CAT /proc/cpuinfo | grep "physical id" | $SORT | $UNIQ | $WC -l )
          cpuCores=$( $CAT /proc/cpuinfo | grep "cpu cores"  | $UNIQ  )
-    cpuProcessors=$( $CAT /proc/cpuinfo | grep "^processor" | $UNIQ  )
+    cpuProcessors=$( $CAT /proc/cpuinfo | grep -c "^processor" )
   fi
-  echo "Physical CPU      : $physicalCPUs"  >> ${LOGDIR}/sysconfig/cpu_details.txt
-  echo "CPU Cores         : $cpuCores"      >> ${LOGDIR}/sysconfig/cpu_details.txt
-  echo "CPU Processors    : $cpuCores"      >> ${LOGDIR}/sysconfig/cpu_details.txt
+  {
+    echo "Physical CPU      : $physicalCPUs"
+    echo "CPU Cores         : $cpuCores"
+    echo "CPU Processors    : $cpuProcessors"
+  } >> "${LOGDIR}"/sysconfig/cpu_details.txt
 }
 
 ##############################################################################
@@ -883,22 +876,22 @@ hardware_checks() {
 boot_section() {
   Echo "Section - Boot Info"
   if [ -x "/sbin/lilo" ] ; then
-    /sbin/lilo -q   > $LOGDIR/sysconfig/lilo_-q  2>&1
+    /sbin/lilo -q   > "$LOGDIR"/sysconfig/lilo_-q  2>&1
   fi
-  $LS -alR /boot  > ${LOGDIR}/sysconfig/ls-alR_boot.out 2>&1
-  MakeDir ${LOGDIR}/boot/grub
-  MakeDir ${LOGDIR}/patch+pkg
-  MakeDir ${LOGDIR}/sysconfig
+  $LS -alR /boot  > "${LOGDIR}"/sysconfig/ls-alR_boot.out 2>&1
+  MakeDir "${LOGDIR}"/boot/grub
+  MakeDir "${LOGDIR}"/patch+pkg
+  MakeDir "${LOGDIR}"/sysconfig
   for i in  /boot/grub/menu.lst  /boot/grub/grub.conf /boot/grub.conf /boot/grub/device.map ; do
     if [ -f ${i} ] ; then
-      $CP -p ${i} ${LOGDIR}/${i}
+      $CP -p ${i} "${LOGDIR}"/${i}
     fi
   done
   if [ -x "$CHKCONFIG" ] ; then
-    $CHKCONFIG --list > ${LOGDIR}/patch+pkg/chkconfig_--list.out 2>&1
+    $CHKCONFIG --list > "${LOGDIR}"/patch+pkg/chkconfig_--list.out 2>&1
   fi
   if [ -x "$SYSTEMCTL" ] ; then
-    $SYSTEMCTL --full --no-pager    > ${LOGDIR}/sysconfig/systemctl_--full_--nopager
+    $SYSTEMCTL --full --no-pager    > "${LOGDIR}"/sysconfig/systemctl_--full_--nopager
   fi
 }
 
@@ -913,52 +906,52 @@ boot_section() {
 
 performance_info() {
   Echo "Section - Performance/System "
-  MakeDir ${LOGDIR}/sysconfig
-  MakeDir ${LOGDIR}/var/log/sa
-  $PS auxw      > ${LOGDIR}/sysconfig/ps_auxw.out
-  $PS -lef      > ${LOGDIR}/sysconfig/ps_-elf.out
-  $HOSTNAME     > ${LOGDIR}/sysconfig/hostname.out
+  MakeDir "${LOGDIR}"/sysconfig
+  MakeDir "${LOGDIR}"/var/log/sa
+  $PS auxw      > "${LOGDIR}"/sysconfig/ps_auxw.out
+  $PS -lef      > "${LOGDIR}"/sysconfig/ps_-elf.out
+  $HOSTNAME     > "${LOGDIR}"/sysconfig/hostname.out
   if [ -e /proc/stat ] ; then
-    $CAT /proc/stat       > ${LOGDIR}/sysconfig/stat.out
+    $CAT /proc/stat       > "${LOGDIR}"/sysconfig/stat.out
   fi
-  if [ -x $DATE ] ; then
-    $DATE     > ${LOGDIR}/sysconfig/date.out
+  if [ -x "$DATE" ] ; then
+    $DATE     > "${LOGDIR}"/sysconfig/date.out
   fi
-  if [ -x $FREE ] ; then
-    $FREE     > ${LOGDIR}/sysconfig/free.out
+  if [ -x "$FREE" ] ; then
+    $FREE     > "${LOGDIR}"/sysconfig/free.out
   fi
-  if [ -x $PSTREE ] ; then
-    $PSTREE     > ${LOGDIR}/sysconfig/pstree.out
+  if [ -x "$PSTREE" ] ; then
+    $PSTREE     > "${LOGDIR}"/sysconfig/pstree.out
   fi
-  if [ -x $IPCS ] ; then
-    $IPCS -a    > ${LOGDIR}/sysconfig/ipcs_-a.out
+  if [ -x "$IPCS" ] ; then
+    $IPCS -a    > "${LOGDIR}"/sysconfig/ipcs_-a.out
     if [ "$OSNAME" == "Darwin" ] ; then
-      $IPCS -q  > ${LOGDIR}/sysconfig/ipcs_-u.out
-      $IPCS -s  > ${LOGDIR}/sysconfig/ipcs_-l.out
+      $IPCS -q  > "${LOGDIR}"/sysconfig/ipcs_-u.out
+      $IPCS -s  > "${LOGDIR}"/sysconfig/ipcs_-l.out
     else
-      $IPCS -u  > ${LOGDIR}/sysconfig/ipcs_-u.out
-      $IPCS -l  > ${LOGDIR}/sysconfig/ipcs_-l.out
+      $IPCS -u  > "${LOGDIR}"/sysconfig/ipcs_-u.out
+      $IPCS -l  > "${LOGDIR}"/sysconfig/ipcs_-l.out
     fi
   fi
-  $UPTIME       > ${LOGDIR}/sysconfig/uptime.out
-  ulimit -a     > ${LOGDIR}/sysconfig/ulimit_-a.out
-  if [ -x $VMSTAT ] ; then
+  $UPTIME       > "${LOGDIR}"/sysconfig/uptime.out
+  ulimit -a     > "${LOGDIR}"/sysconfig/ulimit_-a.out
+  if [ -x "$VMSTAT" ] ; then
     if [ "$OSNAME" == "Darwin" ] ; then
-      $VMSTAT    > ${LOGDIR}/sysconfig/vmstat_-s.out
+      $VMSTAT    > "${LOGDIR}"/sysconfig/vmstat_-s.out
     else
-      $VMSTAT -s > ${LOGDIR}/sysconfig/vmstat_-s.out
+      $VMSTAT -s > "${LOGDIR}"/sysconfig/vmstat_-s.out
     fi
   fi
   if [ "$LSOF" != "" ] ; then
-    $LSOF >  ${LOGDIR}/sysconfig/lsof.out  2>&1
+    $LSOF >  "${LOGDIR}"/sysconfig/lsof.out  2>&1
   fi
   if [ -d /var/log/sa ] ; then
     if [ "$($LS -l /var/log/sa/ |$WC -l |$SED 's/ //g')" != "0" ]  ; then
-      $CP -p /var/log/sa/sa*   ${LOGDIR}/var/log/sa
+      $CP -p /var/log/sa/sa*   "${LOGDIR}"/var/log/sa
     fi
   fi
   if [ -e /proc/loadavg ] ; then
-    $CAT /proc/loadavg    > ${LOGDIR}/sysconfig/loadavg.out
+    $CAT /proc/loadavg    > "${LOGDIR}"/sysconfig/loadavg.out
   fi
 }
 
@@ -973,33 +966,33 @@ performance_info() {
 
 kernel_info() {
   Echo "Section - Kernel info"
-  $SYSCTL  -A  > ${LOGDIR}/sysconfig/sysctl_-A.out  2>&1
-  $UNAME -a    > ${LOGDIR}/sysconfig/uname_-a.out
-  $RUNLEVEL    > ${LOGDIR}/sysconfig/runlevel.out
-  $WHO -r      > ${LOGDIR}/sysconfig/who_-r.out
-  $SLABTOP -o  > ${LOGDIR}/sysconfig/slabtop_-o.out
-  if [ ! -d ${LOGDIR}/kernel/info ] ; then
-    MakeDir ${LOGDIR}/kernel/info
+  $SYSCTL  -A  > "${LOGDIR}"/sysconfig/sysctl_-A.out  2>&1
+  $UNAME -a    > "${LOGDIR}"/sysconfig/uname_-a.out
+  $RUNLEVEL    > "${LOGDIR}"/sysconfig/runlevel.out
+  $WHO -r      > "${LOGDIR}"/sysconfig/who_-r.out
+  $SLABTOP -o  > "${LOGDIR}"/sysconfig/slabtop_-o.out
+  if [ ! -d "${LOGDIR}"/kernel/info ] ; then
+    MakeDir "${LOGDIR}"/kernel/info
   fi
-  $LSMOD > ${LOGDIR}/kernel/lsmod.out 2>&1
-  $LSMOD | while read line ; do
-    kernmod=$( echo $line | $AWK '{ print $1 }' )
-    $MODINFO $kernmod  > ${LOGDIR}/kernel/info/${kernmod}.out 2>&1
+  $LSMOD > "${LOGDIR}"/kernel/lsmod.out 2>&1
+  $LSMOD | while read -r line ; do
+    kernmod=$( echo "$line" | $AWK '{ print $1 }' )
+    $MODINFO "$kernmod"  > "${LOGDIR}"/kernel/info/"${kernmod}".out 2>&1
   done
-  if [ -x $KSYMS ] ; then
-    $KSYMS    > ${LOGDIR}/kernel/ksyms.out 2>&1
+  if [ -x "$KSYMS" ] ; then
+    $KSYMS    > "${LOGDIR}"/kernel/ksyms.out 2>&1
   fi
-  $CP -p /lib/modules/$($UNAME -r)/modules.dep ${LOGDIR}/sysconfig/modules.dep
-  $MODPROBE -n -l -v  > ${LOGDIR}/sysconfig/modprobe_-n-l-v.out  2>&1
-  $DEPMOD -av         > ${LOGDIR}/sysconfig/depmod_-av.out       2>&1
+  $CP -p /lib/modules/"$($UNAME -r)"/modules.dep "${LOGDIR}"/sysconfig/modules.dep
+  $MODPROBE -n -l -v  > "${LOGDIR}"/sysconfig/modprobe_-n-l-v.out  2>&1
+  $DEPMOD -av         > "${LOGDIR}"/sysconfig/depmod_-av.out       2>&1
   if [ -e /proc/modules ] ; then
-    $CAT /proc/modules  > ${LOGDIR}/sysconfig/modules.out        2>&1
+    $CAT /proc/modules  > "${LOGDIR}"/sysconfig/modules.out        2>&1
   fi
   ##############################################################################
   # Get the kernel configuration details from a 2.6 kernel
   ##############################################################################
   if [ -f /proc/config.gz ] ; then
-    $GUNZIP -c /proc/config.gz > ${LOGDIR}/kernel/config
+    $GUNZIP -c /proc/config.gz > "${LOGDIR}"/kernel/config
   fi
 }
 
@@ -1015,25 +1008,25 @@ kernel_info() {
 disk_info() {
   Echo "Section - Disk Section Checks"
   local Dirname
-  MakeDir ${LOGDIR}/disks
+  MakeDir "${LOGDIR}"/disks
   # Check to see what is mounted
-  $DF -k    > ${LOGDIR}/disks/df_-k.out    2>&1
-  $DF -h    > ${LOGDIR}/disks/df_-h.out    2>&1
-  $DF -ki   > ${LOGDIR}/disks/df_-ki.out   2>&1
-  $DF -aki  > ${LOGDIR}/disks/df_-aki.out  2>&1
-  $DF -akih > ${LOGDIR}/disks/df_-akih.out 2>&1
-  if [ -x $SWAPON ] ; then
-    $SWAPON -s > ${LOGDIR}/swapon_-s.out 2>&1
+  $DF -k    > "${LOGDIR}"/disks/df_-k.out    2>&1
+  $DF -h    > "${LOGDIR}"/disks/df_-h.out    2>&1
+  $DF -ki   > "${LOGDIR}"/disks/df_-ki.out   2>&1
+  $DF -aki  > "${LOGDIR}"/disks/df_-aki.out  2>&1
+  $DF -akih > "${LOGDIR}"/disks/df_-akih.out 2>&1
+  if [ -x "$SWAPON" ] ; then
+    $SWAPON -s > "${LOGDIR}"/swapon_-s.out 2>&1
   fi
-  $MOUNT              > ${LOGDIR}/disks/mount.out           2>&1
-  $MOUNT -l           > ${LOGDIR}/disks/mount_-l.out        2>&1
+  $MOUNT              > "${LOGDIR}"/disks/mount.out           2>&1
+  $MOUNT -l           > "${LOGDIR}"/disks/mount_-l.out        2>&1
   if [ -f /proc/mounts ] ; then
-    $CAT /proc/mounts > ${LOGDIR}/disks/cat_proc-mounts.out 2>&1
+    $CAT /proc/mounts > "${LOGDIR}"/disks/cat_proc-mounts.out 2>&1
   fi
 
   # Display any quotas that my have been set
-  if [ -x  $REPQUOTA ] ; then
-      $REPQUOTA -av > ${LOGDIR}/disks/repquota_-av 2>&1
+  if [ -x  "$REPQUOTA" ] ; then
+      $REPQUOTA -av > "${LOGDIR}"/disks/repquota_-av 2>&1
   fi
 
   ##############################################################################
@@ -1042,100 +1035,100 @@ disk_info() {
 
   DISKLIST=$($FDISK -l  2>/dev/null | grep "^/dev" | sed 's/[0-9]//g' | awk '{ print $1 }' | sort -u)
 
-  if [ -x $FDISK ] ; then
-    $FDISK   -l > ${LOGDIR}/disks/fdisk_-l.out  2>&1
+  if [ -x "$FDISK" ] ; then
+    $FDISK   -l > "${LOGDIR}"/disks/fdisk_-l.out  2>&1
   fi
 
-  if [ -x $SFDISK ] ; then
-    $SFDISK  -l > ${LOGDIR}/disks/sfdisk_-l.out 2>&1
-    $SFDISK  -s > ${LOGDIR}/disks/sfdisk_-s.out 2>&1
+  if [ -x "$SFDISK" ] ; then
+    $SFDISK  -l > "${LOGDIR}"/disks/sfdisk_-l.out 2>&1
+    $SFDISK  -s > "${LOGDIR}"/disks/sfdisk_-s.out 2>&1
   fi
 
-  if [ -x $BLKID ] ; then
-    $BLKID > ${LOGDIR}/disks/blkid.out 2>&1
+  if [ -x "$BLKID" ] ; then
+    $BLKID > "${LOGDIR}"/disks/blkid.out 2>&1
   fi
 
-  if [ -x $LSBLK ] ; then
-    $LSBLK -f     > ${LOGDIR}/disks/lsblk_-f.out     2>&1
-    $LSBLK -a     > ${LOGDIR}/disks/lsblk_-a.out     2>&1
-    $LSBLK -p     > ${LOGDIR}/disks/lsblk_-p.out     2>&1
-    $LSBLK -t     > ${LOGDIR}/disks/lsblk_-t.out     2>&1
-    $LSBLK -S     > ${LOGDIR}/disks/lsblk_-S.out     2>&1
-    $LSBLK --list > ${LOGDIR}/disks/lsblk_--list.out 2>&1
+  if [ -x "$LSBLK" ] ; then
+    $LSBLK -f     > "${LOGDIR}"/disks/lsblk_-f.out     2>&1
+    $LSBLK -a     > "${LOGDIR}"/disks/lsblk_-a.out     2>&1
+    $LSBLK -p     > "${LOGDIR}"/disks/lsblk_-p.out     2>&1
+    $LSBLK -t     > "${LOGDIR}"/disks/lsblk_-t.out     2>&1
+    $LSBLK -S     > "${LOGDIR}"/disks/lsblk_-S.out     2>&1
+    $LSBLK --list > "${LOGDIR}"/disks/lsblk_--list.out 2>&1
   fi
-  if [ -x $LSSCSI ] ; then
-    $LSSCSI -l > ${LOGDIR}/disks/lsscsi_-l.out 2>&1
-    $LSSCSI -g > ${LOGDIR}/disks/lsscsi_-g.out 2>&1
+  if [ -x "$LSSCSI" ] ; then
+    $LSSCSI -l > "${LOGDIR}"/disks/lsscsi_-l.out 2>&1
+    $LSSCSI -g > "${LOGDIR}"/disks/lsscsi_-g.out 2>&1
   fi
   for DISK in $DISKLIST ; do
-    Dirname=$(dirname $DISK)
+    Dirname=$(dirname "$DISK")
     if [ "$Dirname" == "/dev/mapper" ] ; then
-      if [ ! -L  $DISK ] ; then
+      if [ ! -L  "$DISK" ] ; then
         continue
       fi
     fi
-    NEWDISK=$(/bin/echo $DISK |  sed 's/\//-/g'  | sed 's/^-//'g )
-    if [ -x $HDPARM ] ; then
-      $HDPARM -vIi $DISK > ${LOGDIR}/disks/hdparm_-vIi_${NEWDISK}.out 2>&1
+    NEWDISK=$(/bin/echo "$DISK" |  sed 's/\//-/g'  | sed 's/^-//g')
+    if [ -x "$HDPARM" ] ; then
+      $HDPARM -vIi "$DISK" > "${LOGDIR}"/disks/hdparm_-vIi_"${NEWDISK}".out 2>&1
     fi
-    if [ -x $SFDISK ] ; then
-      $SFDISK  -l $DISK  > ${LOGDIR}/disks/sfdisk_-l_${NEWDISK}.out   2>&1
+    if [ -x "$SFDISK" ] ; then
+      $SFDISK  -l "$DISK"  > "${LOGDIR}"/disks/sfdisk_-l_"${NEWDISK}".out   2>&1
     fi
-    if [ -x $FDISK ] ; then
-      $FDISK   -l $DISK  > ${LOGDIR}/disks/fdisk_-l_${NEWDISK}.out   2>&1
+    if [ -x "$FDISK" ] ; then
+      $FDISK   -l "$DISK"  > "${LOGDIR}"/disks/fdisk_-l_"${NEWDISK}".out   2>&1
     fi
   done
   if [ -x "$DUMPE2FS" ] ; then
-    MakeDir ${LOGDIR}/disks/dumpe2fs
+    MakeDir "${LOGDIR}"/disks/dumpe2fs
     PARTS=$($FDISK -l 2>/dev/null | grep "^/dev" | awk '{ print $1 }')
     for parts in $PARTS ; do
-      name=$(/bin/echo $parts | sed 's/\//_/g')
-      $DUMPE2FS $parts > ${LOGDIR}/disks/dumpe2fs/fdisk_-l_${name}.out 2>&1
+      name=$(/bin/echo "$parts" | sed 's/\//_/g')
+      $DUMPE2FS "$parts" > "${LOGDIR}"/disks/dumpe2fs/fdisk_-l_"${name}".out 2>&1
     done
   fi
   ##############################################################################
   # Collect Detailed SCSI information about the disks
   ##############################################################################
   if [ -x "$SCSI_ID" ] ; then
-    for i in $($LS [a-z]d[a-z]  2>/dev/null) ; do
-      if [ -b /dev/${i} ] ; then
-        disk_name=$(/bin/echo /dev/${i} | sed 's/\//_/g')
-        $SCSI_ID -g -p 0x80 -d /dev/${i} -s /block/${i} \
-             > ${LOGDIR}/disks/scsi_id_-g_-p_0x80_${disk_name}.out 2>&1
-        $SCSI_ID  -g -p 0x83 -d /dev/${i} -s /block/${i} \
-             > ${LOGDIR}/disks/scsi_id_-g_-p_0x83_${disk_name}.out 2>&1
+    for i in $($LS /dev/[a-z]d[a-z] 2>/dev/null | $AWK -F/ '{print $NF}') ; do
+      if [ -b /dev/"${i}" ] ; then
+        disk_name=$(/bin/echo /dev/"${i}" | sed 's/\//_/g')
+        $SCSI_ID -g -p 0x80 -d /dev/"${i}" -s /block/"${i}" \
+             > "${LOGDIR}"/disks/scsi_id_-g_-p_0x80_"${disk_name}".out 2>&1
+        $SCSI_ID  -g -p 0x83 -d /dev/"${i}" -s /block/"${i}" \
+             > "${LOGDIR}"/disks/scsi_id_-g_-p_0x83_"${disk_name}".out 2>&1
       fi
     done
-    for disk in $($LS  /dev/[a-z]d[a-z]) ; do
-      wwid=`$SCSI_ID -g -u $disk`
+    for disk in $($LS /dev/[a-z]d[a-z] 2>/dev/null) ; do
+      wwid=$($SCSI_ID -g -u "$disk")
       if [ "$wwid" != "" ] ; then
-        $ECHO -e "Disk:" $disk_short "\tWWID:" $wwid >> ${LOGDIR}/disks/disk_mapping-wwid.out
+        $ECHO -e "Disk:" "${disk##*/}" "\tWWID:" "$wwid" >> "${LOGDIR}"/disks/disk_mapping-wwid.out
       fi
     done
   fi
-  if [ -x $SYSTOOL ] ; then
-    $SYSTOOL -c scsi_host -v  > ${LOGDIR}/disks/systool_-c_scsi_host_-v.out 2>&1
+  if [ -x "$SYSTOOL" ] ; then
+    $SYSTOOL -c scsi_host -v  > "${LOGDIR}"/disks/systool_-c_scsi_host_-v.out 2>&1
   fi
   ##############################################################################
   # If we are using multi-pathings then print out the
   # multi-pathing information
   ##############################################################################
   if [ -x "$MULTIPATH" ] ; then
-    $MULTIPATH -ll  > ${LOGDIR}/disks/multipath_-ll.out 2>&1
-    $MULTIPATH -v4  > ${LOGDIR}/disks/multipath_-v2.out 2>&1
+    $MULTIPATH -ll  > "${LOGDIR}"/disks/multipath_-ll.out 2>&1
+    $MULTIPATH -v4  > "${LOGDIR}"/disks/multipath_-v2.out 2>&1
   fi
   if [ -x "$DMSETUP" ] ; then
-    MakeDir  ${LOGDIR}/disks/dmsetup
-    $DMSETUP ls         > ${LOGDIR}/disks/dmsetup/dmsetup_ls.out        2>&1
-    $DMSETUP ls --tree  > ${LOGDIR}/disks/dmsetup/dmsetup_ls--info.out  2>&1
-    $DMSETUP info       > ${LOGDIR}/disks/dmsetup/dmsetup_info.out      2>&1
-    $DMSETUP info       > ${LOGDIR}/disks/dmsetup/dmsetup_info-C.out    2>&1
-    $DMSETUP deps       > ${LOGDIR}/disks/dmsetup/dmsetup_deps.out      2>&1
-    $DMSETUP targets    > ${LOGDIR}/disks/dmsetup/dmsetup_targets.out   2>&1
+    MakeDir  "${LOGDIR}"/disks/dmsetup
+    $DMSETUP ls         > "${LOGDIR}"/disks/dmsetup/dmsetup_ls.out        2>&1
+    $DMSETUP ls --tree  > "${LOGDIR}"/disks/dmsetup/dmsetup_ls--info.out  2>&1
+    $DMSETUP info       > "${LOGDIR}"/disks/dmsetup/dmsetup_info.out      2>&1
+    $DMSETUP info       > "${LOGDIR}"/disks/dmsetup/dmsetup_info-C.out    2>&1
+    $DMSETUP deps       > "${LOGDIR}"/disks/dmsetup/dmsetup_deps.out      2>&1
+    $DMSETUP targets    > "${LOGDIR}"/disks/dmsetup/dmsetup_targets.out   2>&1
   fi
   # Check to see what iscsi devices have
   if [ -x "$ISCSIADM" ] ; then
-    $ISCSIADM -m session > ${LOGDIR}/disks/iscsiadm_-m_session.out 2>&1
+    $ISCSIADM -m session > "${LOGDIR}"/disks/iscsiadm_-m_session.out 2>&1
   fi
 }
 
@@ -1150,25 +1143,26 @@ disk_info() {
 
 emc_powerpath_info() {
   Echo "Section - EMC Powerpath checks"
-  if [ ! -d  ${LOGDIR}/disks/emcpower ] ; then
-    MakeDir  ${LOGDIR}/disks/emcpower
+  if [ ! -d  "${LOGDIR}"/disks/emcpower ] ; then
+    MakeDir  "${LOGDIR}"/disks/emcpower
   fi
   EMCPOWER=${LOGDIR}/disks/emcpower
   # Check to see what emc powerpath devices we have
   if [ ! -x "$POWERMT" ] ; then
-    $ECHO "No $POWERMT Program found" > ${EMCPOWER}/Readme.out
+    $ECHO "No $POWERMT Program found" > "${EMCPOWER}"/Readme.out
     return
   fi
-  $POWERMT check_registration       > ${EMCPOWER}/powermt_check_registration.out      2>&1
-  $POWERMT display path             > ${EMCPOWER}/powermt_display_path.out            2>&1
-  $POWERMT display ports            > ${EMCPOWER}/powermt_display_ports.out           2>&1
-  $POWERMT display paths class=all  > ${EMCPOWER}/powermt_display_paths_class=all.out 2>&1
-  $POWERMT display ports dev=all    > ${EMCPOWER}/powermt_display_ports_dev=all.out   2>&1
-  $POWERMT display dev=all          > ${EMCPOWER}/powermt_display_dev=all.out         2>&1
+  $POWERMT check_registration       > "${EMCPOWER}"/powermt_check_registration.out      2>&1
+  $POWERMT display path             > "${EMCPOWER}"/powermt_display_path.out            2>&1
+  $POWERMT display ports            > "${EMCPOWER}"/powermt_display_ports.out           2>&1
+  $POWERMT display paths class=all  > "${EMCPOWER}"/powermt_display_paths_class=all.out 2>&1
+  $POWERMT display ports dev=all    > "${EMCPOWER}"/powermt_display_ports_dev=all.out   2>&1
+  $POWERMT display dev=all          > "${EMCPOWER}"/powermt_display_dev=all.out         2>&1
   # Get the partition details for the EMC devices
-  for emcdevice in $(ls /dev/emcpower*) ; do
-    emc_disk_name=$(/bin/echo ${emcdevice} | sed 's/\//_/g')
-    $FDISK -l $emcdevice > ${EMCPOWER}/fdisk_-l_${emc_disk_name}.out 2>&1
+  for emcdevice in /dev/emcpower* ; do
+    [ -e "$emcdevice" ] || continue
+    emc_disk_name=$(/bin/echo "${emcdevice}" | sed 's/\//_/g')
+    $FDISK -l "$emcdevice" > "${EMCPOWER}"/fdisk_-l_"${emc_disk_name}".out 2>&1
   done
 }
 
@@ -1183,20 +1177,20 @@ emc_powerpath_info() {
 
 netapp_info() {
   if [ ! -x $SANLUN ] ; then
-    $ECHO "No $SANLUN Program found"    > ${NETAPPDIR}/Readme.out
+    $ECHO "No $SANLUN Program found"    > "${NETAPPDIR}"/Readme.out
     return
   fi
-  if [ ! -d ${LOGDIR}/disks/netapp ] ; then
-    MakeDir  ${LOGDIR}/disks/netapp
+  if [ ! -d "${LOGDIR}"/disks/netapp ] ; then
+    MakeDir  "${LOGDIR}"/disks/netapp
   fi
   Echo "Section - Netapp checks"
   NETAPPDIR=${LOGDIR}/disks/netapp
-  MakeDir $NETAPPDIR
-  $SANLUN version                   > ${NETAPPDIR}/sanlun_version                 2>&1
-  $SANLUN lun show -v all           > ${NETAPPDIR}/sanlun_lun_show_-v_all         2>&1
-  $SANLUN fcp show adapter -v all   > ${NETAPPDIR}/sanlun_fcp_show_adapter_-v_all 2>&1
-  $SANLUN lun show -v all           > ${NETAPPDIR}/sanlun_lun_show-v_all          2>&1
-  $SANLUN fcp show adapter -v all   > ${NETAPPDIR}/sanlun_fcp_show_adapter_-v_all 2>&1
+  MakeDir "$NETAPPDIR"
+  $SANLUN version                   > "${NETAPPDIR}"/sanlun_version                 2>&1
+  $SANLUN lun show -v all           > "${NETAPPDIR}"/sanlun_lun_show_-v_all         2>&1
+  $SANLUN fcp show adapter -v all   > "${NETAPPDIR}"/sanlun_fcp_show_adapter_-v_all 2>&1
+  $SANLUN lun show -v all           > "${NETAPPDIR}"/sanlun_lun_show-v_all          2>&1
+  $SANLUN fcp show adapter -v all   > "${NETAPPDIR}"/sanlun_fcp_show_adapter_-v_all 2>&1
 }
 
 ##############################################################################
@@ -1211,36 +1205,36 @@ netapp_info() {
 veritas_vm() {
   Echo "Section - Veritas Volume Manager checks"
   if [ -d /dev/vx ] ; then
-    if [ ! -d  ${LOGDIR}/disks/vxvm ] ; then
-      MakeDir ${LOGDIR}/disks/vxvm
-      MakeDir ${LOGDIR}/disks/vxvm/logs
-      MakeDir ${LOGDIR}/disks/vxvm/disk_groups
+    if [ ! -d  "${LOGDIR}"/disks/vxvm ] ; then
+      MakeDir "${LOGDIR}"/disks/vxvm
+      MakeDir "${LOGDIR}"/disks/vxvm/logs
+      MakeDir "${LOGDIR}"/disks/vxvm/disk_groups
     fi
-    $LS -laR /dev/vx >  ${LOGDIR}/disks/vxvm/ls-lR_dev_vx.out 2>&1
-    if [ -x $VXDISK  ] ; then
-      $VXDISK list            > ${LOGDIR}/disks/vxvm/vxdisk_list.out           2>&1
-      $VXDISK -o alldgs list  > ${LOGDIR}/disks/vxvm/vxdisk_-o_alldgs_list.out 2>&1
-      $VXPRINT -Ath           > ${LOGDIR}/disks/vxvm/vxprint_-Ath.out          2>&1
-      $VXPRINT -h             > ${LOGDIR}/disks/vxvm/vxprint_-h.out            2>&1
-      $VXPRINT -hr            > ${LOGDIR}/disks/vxvm/vxprint_-hr.out           2>&1
-      $VXPRINT -th            > ${LOGDIR}/disks/vxvm/vxprint_-th.out           2>&1
-      $VXPRINT -thrL          > ${LOGDIR}/disks/vxvm/vxprint_-thrL.out         2>&1
+    $LS -laR /dev/vx >  "${LOGDIR}"/disks/vxvm/ls-lR_dev_vx.out 2>&1
+    if [ -x "$VXDISK"  ] ; then
+      $VXDISK list            > "${LOGDIR}"/disks/vxvm/vxdisk_list.out           2>&1
+      $VXDISK -o alldgs list  > "${LOGDIR}"/disks/vxvm/vxdisk_-o_alldgs_list.out 2>&1
+      $VXPRINT -Ath           > "${LOGDIR}"/disks/vxvm/vxprint_-Ath.out          2>&1
+      $VXPRINT -h             > "${LOGDIR}"/disks/vxvm/vxprint_-h.out            2>&1
+      $VXPRINT -hr            > "${LOGDIR}"/disks/vxvm/vxprint_-hr.out           2>&1
+      $VXPRINT -th            > "${LOGDIR}"/disks/vxvm/vxprint_-th.out           2>&1
+      $VXPRINT -thrL          > "${LOGDIR}"/disks/vxvm/vxprint_-thrL.out         2>&1
     fi
-    if [ -x $VXDG ] ; then
-      $VXDG -q list       > ${LOGDIR}/disks/vxvm/vxdg_-q_-list.out   2>&1
+    if [ -x "$VXDG" ] ; then
+      $VXDG -q list       > "${LOGDIR}"/disks/vxvm/vxdg_-q_-list.out   2>&1
     fi
     #------------------------------------------------------------------------
     # Collect individual volume information
     #------------------------------------------------------------------------
     for i in $($VXDG -q list|awk '{print $1}') ; do
-      $VXDG list $i     > ${LOGDIR}/disks/vxvm/disk_groups/vxdg_list_${i}.out
-      $VXDG -g $i free  > ${LOGDIR}/disks/vxvm/disk_groups/vxdg_-g_free_${i}.out
-      $VXPRINT -vng $i  > ${LOGDIR}/disks/vxvm/disk_groups/vxprint_-vng_${i}.out
-      VOL=$(cat ${LOGDIR}/disks/vxvm/disk_groups/vxprint_-vng_${i}.out)
-      $VXPRINT -hmQqg $i $VOL  \
-        > ${LOGDIR}/disks/vxvm/disk_groups/vxprint_-hmQqg_4vxmk=${i}.out 2>&1
-      $VXPRINT -hmQqg $i   \
-        > ${LOGDIR}/disks/vxvm/disk_groups/vxprint_-hmQqg=${i}.out 2>&1
+      $VXDG list "$i"     > "${LOGDIR}"/disks/vxvm/disk_groups/vxdg_list_"${i}".out
+      $VXDG -g "$i" free  > "${LOGDIR}"/disks/vxvm/disk_groups/vxdg_-g_free_"${i}".out
+      $VXPRINT -vng "$i"  > "${LOGDIR}"/disks/vxvm/disk_groups/vxprint_-vng_"${i}".out
+      VOL=$(cat "${LOGDIR}"/disks/vxvm/disk_groups/vxprint_-vng_"${i}".out)
+      $VXPRINT -hmQqg "$i" "$VOL"  \
+        > "${LOGDIR}"/disks/vxvm/disk_groups/vxprint_-hmQqg_4vxmk="${i}".out 2>&1
+      $VXPRINT -hmQqg "$i"   \
+        > "${LOGDIR}"/disks/vxvm/disk_groups/vxprint_-hmQqg="${i}".out 2>&1
     done
   fi
 }
@@ -1256,11 +1250,11 @@ veritas_vm() {
 
 filesystem_info() {
   Echo "Section - Filesystem checks"
-  MakeDir ${LOGDIR}/disks/tunefs
+  MakeDir "${LOGDIR}"/disks/tunefs
   for i in $($DF -kl | grep ^/dev | awk '{ print $1 }') ; do
-    if [ -x $TUNE2FS  ] ; then
-      name=$(/bin/echo $i | sed 's/\//_/g')
-      $TUNE2FS -l $i > ${LOGDIR}/disks/tunefs/tunefs_-l_${name}.out 2>&1
+    if [ -x "$TUNE2FS"  ] ; then
+      name=$(/bin/echo "$i" | sed 's/\//_/g')
+      $TUNE2FS -l "$i" > "${LOGDIR}"/disks/tunefs/tunefs_-l_"${name}".out 2>&1
     fi
   done
 }
@@ -1277,11 +1271,11 @@ filesystem_info() {
 nfs_info() {
   Echo "Section - NFS checks"
   # lets see what we have really exported
-  if [ -x $EXPORTFS ] ; then
-    $EXPORTFS -v  > ${LOGDIR}/disks/exportfs_-v.out 2>&1
+  if [ -x "$EXPORTFS" ] ; then
+    $EXPORTFS -v  > "${LOGDIR}"/disks/exportfs_-v.out 2>&1
   fi
   if [ -x "$NFSSTAT" ] ; then
-    $NFSSTAT -a > ${LOGDIR}/disks/nfsstat_-a.out 2>&1
+    $NFSSTAT -a > "${LOGDIR}"/disks/nfsstat_-a.out 2>&1
   fi
 }
 
@@ -1296,19 +1290,19 @@ nfs_info() {
 
 raid_info() {
   Echo "Section - Disk Raid checks"
-  MakeDir ${LOGDIR}/disks/raid
+  MakeDir "${LOGDIR}"/disks/raid
   if [ -x "$LSRAID" ] ; then
     for i in $( $LS /dev/md[0-9]* 2>/dev/null ) ; do
-      name=$(/bin/echo $i | sed 's/\//_/g')
-      $LSRAID -a $i > ${LOGDIR}/disks/raid/lsraid_-a_${name}.out 2>&1
+      name=$(/bin/echo "$i" | sed 's/\//_/g')
+      $LSRAID -a "$i" > "${LOGDIR}"/disks/raid/lsraid_-a_"${name}".out 2>&1
     done
   fi
   if [ -x "$MDADM" ] ; then
     for i in $( $LS /dev/md[0-9]* 2>/dev/null ) ; do
-      name=$( echo $i | sed 's/\//_/g' )
-      $MDADM --detail $i > ${LOGDIR}/disks/raid/mdadm_--detail_${name}.out 2>&1
-      if [ ! -s ${LOGDIR}/disks/raid/mdadm--detail_${name}.out ] ; then
-        $RM -f ${LOGDIR}/disks/raid/mdadm--detail_${name}.out
+      name=$( echo "$i" | sed 's/\//_/g' )
+      $MDADM --detail "$i" > "${LOGDIR}"/disks/raid/mdadm_--detail_"${name}".out 2>&1
+      if [ ! -s "${LOGDIR}"/disks/raid/mdadm--detail_"${name}".out ] ; then
+        $RM -f "${LOGDIR}"/disks/raid/mdadm--detail_"${name}".out
       fi
     done
   fi
@@ -1325,20 +1319,20 @@ raid_info() {
 
 brtfs_info() {
   Echo "Section - btrfs Section"
-  MakeDir ${LOGDIR}/disks/btrfs
+  MakeDir "${LOGDIR}"/disks/btrfs
   # Scan all devices
-  if [ -x $BTRFS ] ; then
-    ${BRTFS} filesystem show > ${LOGDIR}/disks/btrfs/btrfs_filesystem_show.out 2>&1
-    $DF -h -t btrfs 2>/dev/null | grep -v Filesystem  | while read line ; do
-       FS=$(echo $line | awk '{print $6}')
-      FSN=$(echo $FS | sed 's/\//_/g'    )
+  if [ -x "$BTRFS" ] ; then
+    ${BRTFS} filesystem show > "${LOGDIR}"/disks/btrfs/btrfs_filesystem_show.out 2>&1
+    $DF -h -t btrfs 2>/dev/null | grep -v Filesystem  | while read -r line ; do
+       FS=$(echo "$line" | awk '{print $6}')
+      FSN=$(echo "$FS" | sed 's/\//_/g'    )
       if [ "$FS" = "/" ] ; then
         FSN="root"
       fi
-      $BTRFS filesystem df  $FS > ${LOGDIR}/disks/btrfs/btrfs_filesystem_df_$FSN 2>&1
-      $BTRFS subvolume list $FS > ${LOGDIR}/disks/btrfs/btrfs_subvolume_list_$FSN 2>&1
+      $BTRFS filesystem df  "$FS" > "${LOGDIR}"/disks/btrfs/btrfs_filesystem_df_"$FSN" 2>&1
+      $BTRFS subvolume list "$FS" > "${LOGDIR}"/disks/btrfs/btrfs_subvolume_list_"$FSN" 2>&1
     done
-    $BTRFS fi show > ${LOGDIR}/disks/btrfs/btrfs_fi_show.out
+    $BTRFS filesystem show > "${LOGDIR}"/disks/btrfs/btrfs_filesystem_show.out
   fi
 }
 
@@ -1355,18 +1349,18 @@ zfs_info() {
   if [ -x "$ZPOOL" ] ; then
     Echo "Section - ZFS "
     ZFSDIR=${LOGDIR}/disks/zfs
-    MakeDir ${ZFSDIR}
-    $ZPOOL status -v      > ${ZFSDIR}/zpool_status_-v.out 2>&1
-    $ZPOOL status -D      > ${ZFSDIR}/zpool_status_-D.out 2>&1
-    $ZPOOL history        > ${ZFSDIR}/zpool_history.out 2>&1
-    $ZPOOL list           > ${ZFSDIR}/zpool_list.out 2>&1
-    $ZFS list               > ${ZFSDIR}/zfs_list.out 2>&1
-    $ZFS list -o space      > ${ZFSDIR}/zfs_list_-o_space.out 2>&1
-    $ZFS list -t snapshots  > ${ZFSDIR}/zfs_list_-t_snapshots.out 2>&1
-    $ZFS get all        > ${ZFSDIR}/zfs_get_all.out 2>&1
+    MakeDir "${ZFSDIR}"
+    $ZPOOL status -v      > "${ZFSDIR}"/zpool_status_-v.out 2>&1
+    $ZPOOL status -D      > "${ZFSDIR}"/zpool_status_-D.out 2>&1
+    $ZPOOL history        > "${ZFSDIR}"/zpool_history.out 2>&1
+    $ZPOOL list           > "${ZFSDIR}"/zpool_list.out 2>&1
+    $ZFS list               > "${ZFSDIR}"/zfs_list.out 2>&1
+    $ZFS list -o space      > "${ZFSDIR}"/zfs_list_-o_space.out 2>&1
+    $ZFS list -t snapshots  > "${ZFSDIR}"/zfs_list_-t_snapshots.out 2>&1
+    $ZFS get all        > "${ZFSDIR}"/zfs_get_all.out 2>&1
     for poolname in $($ZPOOL list | grep -v NAME | $AWK '{print $1}') ; do
-      $ZFS get all $poolname  > ${ZFSDIR}/zfs_get_all_$poolname.out 2>&1
-      $ZPOOL status $poolname > ${ZFSDIR}/zpool_status_$poolname.out 2>&1
+      $ZFS get all "$poolname"  > "${ZFSDIR}"/zfs_get_all_"$poolname".out 2>&1
+      $ZPOOL status "$poolname" > "${ZFSDIR}"/zpool_status_"$poolname".out 2>&1
     done
   fi
 }
@@ -1383,26 +1377,26 @@ zfs_info() {
 lvm_info() {
   Echo "Section - LVM "
   LVMDIR=${LOGDIR}/disks/lvm
-  MakeDir ${LVMDIR}
+  MakeDir "${LVMDIR}"
   if [ -x "$LVDISPLAY" ] ; then
-    $LVDISPLAY -vv  > ${LVMDIR}/lvdisplay_-vv.out  2>&1
-    $VGDISPLAY -vv  > ${LVMDIR}/vgdisplay_-vv.out  2>&1
-    $VGSCAN -vv     > ${LVMDIR}/vgscan_-vv.out     2>&1
-    $LVMDISKSCAN -v > ${LVMDIR}/lvmdiskscan_-v.out 2>&1
-    $PVSCAN -v      > ${LVMDIR}/pvscan_-v.out      2>&1
-    $PVDISPLAY -v   > ${LVMDIR}/pvdisplay_-v.out   2>&1
-    $VGS -v         > ${LVMDIR}/vgs-v.out          2>&1
-    $PVSCAN -v      > ${LVMDIR}/pvscan-v.out       2>&1
+    $LVDISPLAY -vv  > "${LVMDIR}"/lvdisplay_-vv.out  2>&1
+    $VGDISPLAY -vv  > "${LVMDIR}"/vgdisplay_-vv.out  2>&1
+    $VGSCAN -vv     > "${LVMDIR}"/vgscan_-vv.out     2>&1
+    $LVMDISKSCAN -v > "${LVMDIR}"/lvmdiskscan_-v.out 2>&1
+    $PVSCAN -v      > "${LVMDIR}"/pvscan_-v.out      2>&1
+    $PVDISPLAY -v   > "${LVMDIR}"/pvdisplay_-v.out   2>&1
+    $VGS -v         > "${LVMDIR}"/vgs-v.out          2>&1
+    $PVSCAN -v      > "${LVMDIR}"/pvscan-v.out       2>&1
 
      # Map every DM device to a disk
     $LVDISPLAY 2>/dev/null | \
       $AWK  '/LV Name/{n=$3} /Block device/{d=$3; sub(".*:","dm-",d); print d,n;}' \
-      > ${LVMDIR}/devices.out 2>&1
+      > "${LVMDIR}"/devices.out 2>&1
   fi
   if [ -x "$LVM" ] ; then
-    $LVM dumpconfig                       > ${LVMDIR}/lvm_dumpconfig.out                  2>&1
-    $LVM lvs                              > ${LVMDIR}/lvm_lvs.out                         2>&1
-    $LVM pvs -o +lv_name,lv_size,seg_all  > ${LVMDIR}/pvs_-o_+lv_name:lv_size:seg_all.out 2>&1
+    $LVM dumpconfig                       > "${LVMDIR}"/lvm_dumpconfig.out                  2>&1
+    $LVM lvs                              > "${LVMDIR}"/lvm_lvs.out                         2>&1
+    $LVM pvs -o +lv_name,lv_size,seg_all  > "${LVMDIR}"/pvs_-o_+lv_name:lv_size:seg_all.out 2>&1
   fi
 }
 
@@ -1419,12 +1413,12 @@ disk_dm_info() {
   Echo "Section - Disk DM Info "
   if [ -f /proc/diskstats ] ; then
     # Work out which dm device is being used by each filesystem
-    grep dm-[0-9] /proc/diskstats | awk '{print $1, $2, $3}' | while read line ; do
-       Major=$(echo $line | awk '{print $1}' )
-       Minor=$(echo $line | awk '{print $2}' )
-      Device=$(echo $line | awk '{print $3}' )
-        List=$(ls -la /dev/mapper | grep "${Major},  ${Minor}" | awk '{print $(NF)}')
-      echo "$Device = $List " >> ${LOGDIR}/disks/dm-info.out
+    grep "dm-[0-9]" /proc/diskstats | awk '{print $1, $2, $3}' | while read -r line ; do
+       Major=$(echo "$line" | awk '{print $1}' )
+       Minor=$(echo "$line" | awk '{print $2}' )
+      Device=$(echo "$line" | awk '{print $3}' )
+        List=$(ls -la /dev/mapper | awk -v p="${Major},  ${Minor}" 'index($0, p) {print $NF}')
+      echo "$Device = $List " >> "${LOGDIR}"/disks/dm-info.out
     done
   fi
 }
@@ -1441,48 +1435,47 @@ disk_dm_info() {
 rpm_info() {
   if [ -x "$RPM" ] ; then
     Echo "Section - rpm package information "
-    MakeDir ${LOGDIR}/patch+pkg/rpm/rpm-packages
+    MakeDir "${LOGDIR}"/patch+pkg/rpm/rpm-packages
     #
     # Short Description of all packages installed
     #
-    echo "Package_Name    Version   Size    Description"  > ${LOGDIR}/patch+pkg/rpm/rpm-qa--queryformat.out
-    echo "===================================================================================" >> ${LOGDIR}/patch+pkg/rpm/rpm-qa--queryformat.out
-    $RPM -qa --queryformat '%-25{NAME}  %-16{VERSION} %-10{RELEASE} %-10{DISTRIBUTION}  %-10{SIZE} %-10{INSTALLTIME:date} %{SUMMARY}\n' | sort >> ${LOGDIR}/patch+pkg/rpm/rpm-qa--queryformat.out 2>&1
+    echo "Package_Name    Version   Size    Description"  > "${LOGDIR}"/patch+pkg/rpm/rpm-qa--queryformat.out
+    echo "===================================================================================" >> "${LOGDIR}"/patch+pkg/rpm/rpm-qa--queryformat.out
+    $RPM -qa --queryformat '%-25{NAME}  %-16{VERSION} %-10{RELEASE} %-10{DISTRIBUTION}  %-10{SIZE} %-10{INSTALLTIME:date} %{SUMMARY}\n' | sort >> "${LOGDIR}"/patch+pkg/rpm/rpm-qa--queryformat.out 2>&1
     #
     # Long Description of all packages installed
     #
-    $RPM -qa > ${LOGDIR}/patch+pkg/rpm/rpm_-qa 2>&1
-    $CAT ${LOGDIR}/patch+pkg/rpm/rpm_-qa | while read line ; do
-      $RPM -qi  $line > ${LOGDIR}/patch+pkg/rpm/rpm-packages/${line}.out  2>&1
-      if [ $? -ne 0 ] ; then
+    $RPM -qa > "${LOGDIR}"/patch+pkg/rpm/rpm_-qa 2>&1
+    $CAT "${LOGDIR}"/patch+pkg/rpm/rpm_-qa | while read -r line ; do
+      if ! $RPM -qi  "$line" > "${LOGDIR}"/patch+pkg/rpm/rpm-packages/"${line}".out  2>&1 ; then
         echo "ERROR: ${line} problem"
       fi
     done
     # print a list os installed packages sorted by install time:
-    $RPM -qa -last | tac > ${LOGDIR}/patch+pkg/rpm/rpm_-qa_-last.out
+    $RPM -qa -last | tac > "${LOGDIR}"/patch+pkg/rpm/rpm_-qa_-last.out
     #############################################################
     # If you enable verification then this then it's going to
     # take a some time to complete........
     #############################################################
     if [ ${FULLSOFT} -gt 0 ] ; then
-      $RPM -Va > ${LOGDIR}/patch+pkg/rpm/rpm-Va.out  2>&1
+      $RPM -Va > "${LOGDIR}"/patch+pkg/rpm/rpm-Va.out  2>&1
     fi
   fi
   if [ -f /usr/lib/rpm/rpmrc ] ; then
-    $CP -p /usr/lib/rpm/rpmrc  ${LOGDIR}/patch+pkg/rpm/rpmrc
+    $CP -p /usr/lib/rpm/rpmrc  "${LOGDIR}"/patch+pkg/rpm/rpmrc
   fi
   # Make a copy of the yum config files so that we can compare them
   YUMDIR=${LOGDIR}/patch+pkg/yum
-  MakeDir ${YUMDIR}
+  MakeDir "${YUMDIR}"
   if [ -x "$YUM" ] ; then
-    $YUM list installed       > ${YUMDIR}/yum_list_installed.out        2>&1
-    $YUM info installed       > ${YUMDIR}/yum_info_installed.out        2>&1
-    $YUM -v repolist all      > ${YUMDIR}/yum_-v_repolist_all.out       2>&1
-    $YUM repolist enabled     > ${YUMDIR}/yum_repolist_enabled.out      2>&1
-    $YUM repolist disabled    > ${YUMDIR}/yum_repolist_disabled.out     2>&1
-    $YUM -v repolist all      > ${YUMDIR}/yum_-v_repolist_all.out       2>&1
-    $YUM -v repolist enabled  > ${YUMDIR}/yum_-v_repolist_enabled.out   2>&1
-    $YUM -v repolist disabled > ${YUMDIR}/yum_-v_repolist_disabled.out  2>&1
+    $YUM list installed       > "${YUMDIR}"/yum_list_installed.out        2>&1
+    $YUM info installed       > "${YUMDIR}"/yum_info_installed.out        2>&1
+    $YUM -v repolist all      > "${YUMDIR}"/yum_-v_repolist_all.out       2>&1
+    $YUM repolist enabled     > "${YUMDIR}"/yum_repolist_enabled.out      2>&1
+    $YUM repolist disabled    > "${YUMDIR}"/yum_repolist_disabled.out     2>&1
+    $YUM -v repolist all      > "${YUMDIR}"/yum_-v_repolist_all.out       2>&1
+    $YUM -v repolist enabled  > "${YUMDIR}"/yum_-v_repolist_enabled.out   2>&1
+    $YUM -v repolist disabled > "${YUMDIR}"/yum_-v_repolist_disabled.out  2>&1
   fi
 }
 
@@ -1498,10 +1491,10 @@ rpm_info() {
 pacman_info() {
   if [ -x "$PACMAN" ]  ; then
     Echo "Section - pacman Checks "
-    MakeDir ${LOGDIR}/patch+pkg/packman
-    $PACMAN -qa   > ${LOGDIR}/patch+pkg/packman/pacman_-qa  2>&1
-    $PACMAN -Qi   > ${LOGDIR}/patch+pkg/packman/pacman_-Qi  2>&1
-    $PACMAN -Qdt  > ${LOGDIR}/patch+pkg/packman/pacman_-Qdt 2>&1
+    MakeDir "${LOGDIR}"/patch+pkg/packman
+    $PACMAN -qa   > "${LOGDIR}"/patch+pkg/packman/pacman_-qa  2>&1
+    $PACMAN -Qi   > "${LOGDIR}"/patch+pkg/packman/pacman_-Qi  2>&1
+    $PACMAN -Qdt  > "${LOGDIR}"/patch+pkg/packman/pacman_-Qdt 2>&1
   fi
 }
 
@@ -1517,28 +1510,28 @@ pacman_info() {
 systemd_info() {
   if [ -x "$SYSTEMCTL" ]; then
     Echo "Section - Systemd Checks "
-    MakeDir ${LOGDIR}/system/systemd
+    MakeDir "${LOGDIR}"/system/systemd
     # systemd checks
     if [ -x "$SYSTEMD" ]; then
-      $SYSTEMD  --dump-configuration-items > ${LOGDIR}/system/systemd/systemd_--dump-configuration-items.out 2>&1
-      $SYSTEMD  --test                     > ${LOGDIR}/system/systemd/systemd_--test.out                     2>&1
+      $SYSTEMD  --dump-configuration-items > "${LOGDIR}"/system/systemd/systemd_--dump-configuration-items.out 2>&1
+      $SYSTEMD  --test                     > "${LOGDIR}"/system/systemd/systemd_--test.out                     2>&1
     fi
     # systemd-cgls tree
     if [ -x "$SYSTEMDCGLS" ]; then
-      $SYSTEMDCGLS  > ${LOGDIR}/system/systemd/systemd-cgls.out 2>&1
+      $SYSTEMDCGLS  > "${LOGDIR}"/system/systemd/systemd-cgls.out 2>&1
     fi
     if [ -x "$SYSTEMDLOGINCTL" ]; then
-      $SYSTEMDLOGINCTL --all     > ${LOGDIR}/system/systemd/systemd-loginctl_--all.out     2>&1
-      $SYSTEMDLOGINCTL show-seat > ${LOGDIR}/system/systemd/systemd-loginctl_show-seat.out 2>&1
-      $SYSTEMDLOGINCTL show-user > ${LOGDIR}/system/systemd/systemd-loginctl_show_user.out 2>&1
+      $SYSTEMDLOGINCTL --all     > "${LOGDIR}"/system/systemd/systemd-loginctl_--all.out     2>&1
+      $SYSTEMDLOGINCTL show-seat > "${LOGDIR}"/system/systemd/systemd-loginctl_show-seat.out 2>&1
+      $SYSTEMDLOGINCTL show-user > "${LOGDIR}"/system/systemd/systemd-loginctl_show_user.out 2>&1
     fi
-    $SYSTEMCTL                  > ${LOGDIR}/system/systemd/systemctl.out                  2>&1
-    $SYSTEMCTL --all            > ${LOGDIR}/system/systemd/systemctl_--all.out            2>&1
-    $SYSTEMCTL show-environment > ${LOGDIR}/system/systemd/systemctl_show-environment.out 2>&1
-    $SYSTEMCTL --version        > ${LOGDIR}/system/systemd/systemctl_--version.out        2>&1
-    $SYSTEMCTL list-unit-files  > ${LOGDIR}/system/systemd/systemctl_list-unit-files.out  2>&1
-    $SYSTEMCTL list-jobs        > ${LOGDIR}/system/systemd/systemctl_list-jobs.out        2>&1
-    $SYSTEMCTL list-unit-files --type=service  > ${LOGDIR}/system/systemd/systemctl_list--unit-files_--type=service.out  2>&1
+    $SYSTEMCTL                  > "${LOGDIR}"/system/systemd/systemctl.out                  2>&1
+    $SYSTEMCTL --all            > "${LOGDIR}"/system/systemd/systemctl_--all.out            2>&1
+    $SYSTEMCTL show-environment > "${LOGDIR}"/system/systemd/systemctl_show-environment.out 2>&1
+    $SYSTEMCTL --version        > "${LOGDIR}"/system/systemd/systemctl_--version.out        2>&1
+    $SYSTEMCTL list-unit-files  > "${LOGDIR}"/system/systemd/systemctl_list-unit-files.out  2>&1
+    $SYSTEMCTL list-jobs        > "${LOGDIR}"/system/systemd/systemctl_list-jobs.out        2>&1
+    $SYSTEMCTL list-unit-files --type=service  > "${LOGDIR}"/system/systemd/systemctl_list--unit-files_--type=service.out  2>&1
   fi
 }
 
@@ -1554,21 +1547,21 @@ systemd_info() {
 deb_info() {
   if [ -f /var/lib/dpkg/available ] ; then
     Echo "Section - deb package information "
-    MakeDir ${LOGDIR}/var/lib/dpkg
+    MakeDir "${LOGDIR}"/var/lib/dpkg
     if [ -f /var/lib/dpkg/status ] ; then
-      $CP -p /var/lib/dpkg/status ${LOGDIR}/var/lib/dpkg/status
+      $CP -p /var/lib/dpkg/status "${LOGDIR}"/var/lib/dpkg/status
     fi
-    MakeDir ${LOGDIR}/patch+pkg/dpkg
+    MakeDir "${LOGDIR}"/patch+pkg/dpkg
     if [ -x "$DPKG" ] ; then
-       $DPKG  --list            > ${LOGDIR}/patch+pkg/dpkg/dpkg_--list.out
-       $DPKG  -al           > ${LOGDIR}/patch+pkg/dpkg/dpkg_-al.out
-       $DPKG  --get-selections  > ${LOGDIR}/patch+pkg/dpkg/dpkg_-get-selections.out
+       $DPKG  --list            > "${LOGDIR}"/patch+pkg/dpkg/dpkg_--list.out
+       $DPKG  -al           > "${LOGDIR}"/patch+pkg/dpkg/dpkg_-al.out
+       $DPKG  --get-selections  > "${LOGDIR}"/patch+pkg/dpkg/dpkg_-get-selections.out
     fi
     if [ -x "$DPKG_QUERY" ] ; then
-       $DPKG_QUERY -W     > ${LOGDIR}/patch+pkg/dpkg/dpkg-query_-W.out
+       $DPKG_QUERY -W     > "${LOGDIR}"/patch+pkg/dpkg/dpkg-query_-W.out
     fi
     if [ -x /usr/bin/apt-config ] ; then
-      /usr/bin/apt-config dump  > ${LOGDIR}/patch+pkg/dpkg/apt-config_dump.out
+      /usr/bin/apt-config dump  > "${LOGDIR}"/patch+pkg/dpkg/apt-config_dump.out
     fi
   fi
 }
@@ -1587,17 +1580,17 @@ deb_info() {
 suse_zypper_info() {
   if [ -x "$ZYPPER" ] ; then
     Echo "Section - Suse Zypper Info "
-    MakeDir ${LOGDIR}/patch+pkg/zypper
-    $ZYPPER repos         > ${LOGDIR}/patch+pkg/zypper/zypper_repos         2>&1
-    $ZYPPER locks         > ${LOGDIR}/patch+pkg/zypper/zypper_locks         2>&1
-    $ZYPPER patches       > ${LOGDIR}/patch+pkg/zypper/zypper_patches       2>&1
-    $ZYPPER packages      > ${LOGDIR}/patch+pkg/zypper/zypper_packages      2>&1
-    $ZYPPER patterns      > ${LOGDIR}/patch+pkg/zypper/zypper_patterns      2>&1
-    $ZYPPER products      > ${LOGDIR}/patch+pkg/zypper/zypper_products      2>&1
-    $ZYPPER services      > ${LOGDIR}/patch+pkg/zypper/zypper_services      2>&1
-    $ZYPPER licenses      > ${LOGDIR}/patch+pkg/zypper/zypper_licenses      2>&1
-    $ZYPPER targetos      > ${LOGDIR}/patch+pkg/zypper/zypper_targetos      2>&1
-    $ZYPPER list-updates  > ${LOGDIR}/patch+pkg/zypper/zypper_list-updates  2>&1
+    MakeDir "${LOGDIR}"/patch+pkg/zypper
+    $ZYPPER repos         > "${LOGDIR}"/patch+pkg/zypper/zypper_repos         2>&1
+    $ZYPPER locks         > "${LOGDIR}"/patch+pkg/zypper/zypper_locks         2>&1
+    $ZYPPER patches       > "${LOGDIR}"/patch+pkg/zypper/zypper_patches       2>&1
+    $ZYPPER packages      > "${LOGDIR}"/patch+pkg/zypper/zypper_packages      2>&1
+    $ZYPPER patterns      > "${LOGDIR}"/patch+pkg/zypper/zypper_patterns      2>&1
+    $ZYPPER products      > "${LOGDIR}"/patch+pkg/zypper/zypper_products      2>&1
+    $ZYPPER services      > "${LOGDIR}"/patch+pkg/zypper/zypper_services      2>&1
+    $ZYPPER licenses      > "${LOGDIR}"/patch+pkg/zypper/zypper_licenses      2>&1
+    $ZYPPER targetos      > "${LOGDIR}"/patch+pkg/zypper/zypper_targetos      2>&1
+    $ZYPPER list-updates  > "${LOGDIR}"/patch+pkg/zypper/zypper_list-updates  2>&1
   fi
 }
 
@@ -1614,9 +1607,9 @@ suse_zypper_info() {
 gentoo_pkgs_info() {
   if [ -d  /var/db/pkg  ] ; then
     Echo "Section - Gentoo Packages Info "
-    MakeDir ${LOGDIR}/patch+pkg/gentoo
+    MakeDir "${LOGDIR}"/patch+pkg/gentoo
     GENTOPKGS=${LOGDIR}/patch+pkg/gentoo/gento_kgs.out
-    ( find /var/db/pkg -type f -name environment.bz2 | while read x; do bzcat $x | \
+    ( find /var/db/pkg -type f -name environment.bz2 | while read -r x; do bzcat "$x" | \
       awk -F= '{
         if ($1 == "CATEGORY"){
           printf "%s ", $2;
@@ -1628,14 +1621,14 @@ gentoo_pkgs_info() {
           print $2;
         }
       }' ; done
-    ) >> $GENTOPKGS
-    if [ -x $EQUERY ] ; then
-      $EQUERY list > ${LOGDIR}/patch+pkg/gentoo/equery_list.out
+    ) >> "$GENTOPKGS"
+    if [ -x "$EQUERY" ] ; then
+      $EQUERY list > "${LOGDIR}"/patch+pkg/gentoo/equery_list.out
     fi
   fi
   #  Show the bootup info
-  if [ -x $RC_UPDATE ] ; then
-    $RC_UPDATE show > ${LOGDIR}/patch+pkg/gentoo/rc-update_show.out
+  if [ -x "$RC_UPDATE" ] ; then
+    $RC_UPDATE show > "${LOGDIR}"/patch+pkg/gentoo/rc-update_show.out
   fi
 }
 
@@ -1649,11 +1642,11 @@ gentoo_pkgs_info() {
 ##############################################################################
 
 spacewalk_info() {
-  if [ -x $SPACERPT  ] ; then
+  if [ -x "$SPACERPT"  ] ; then
     Echo "Section - Spacewalk "
-    MakeDir ${LOGDIR}/satellite
+    MakeDir "${LOGDIR}"/satellite
     for info in users channels errata-list entitlements inventory users-systems errata-systems ; do
-      $SPACERPT  $info  > ${LOGDIR}/satellite/${SPACERPT}_${info} 2>&1
+      $SPACERPT  $info  > "${LOGDIR}"/satellite/"${SPACERPT}"_${info} 2>&1
     done
   fi
 }
@@ -1671,12 +1664,12 @@ rhn_info() {
   if [ -d /etc/sysconfig/rhn ] ; then
     Echo "Section - RedHat Network "
     RDIR=${LOGDIR}/rhn
-    MakeDir ${RDIR}
+    MakeDir "${RDIR}"
     if [ -d  /etc/rhn ] ; then
       if [ -f /etc/sysconfig/rhn/systemid ] ; then
         if [ -x /usr/bin/xsltproc ] ; then
-          /usr/bin/xsltproc $UTILDIR/text.xsl $RDIR/systemid \
-            > $ROOT/$RHNDIR/systemid 2>&1
+          /usr/bin/xsltproc "$UTILDIR"/text.xsl "$RDIR"/systemid \
+            > "$ROOT"/"$RHNDIR"/systemid 2>&1
         fi
       fi
     fi
@@ -1694,21 +1687,21 @@ rhn_info() {
 
 system_logs_info() {
   Echo "Section - Systems Log "
-  $RSYNC -a /var/log/* ${LOGDIR}/logs
-  $DMESG  > ${LOGDIR}/logs/dmesg.out
-  $LAST   > ${LOGDIR}/logs/lastlog
+  CopyTree /var/log/* "${LOGDIR}"/logs
+  $DMESG  > "${LOGDIR}"/logs/dmesg.out
+  $LAST   > "${LOGDIR}"/logs/lastlog
   if [ -d /var/crash ] ; then
     for i in $( $FIND /var/crash -name "*.txt" ) ; do
-      dirname="$(dirname $i)"
-      filename="$(basename $i)"
-      if [ ! -d ${LOGDIR}/${dirname} ] ; then
-        MakeDir ${LOGDIR}/${dirname}
+      dirname="$(dirname "$i")"
+      filename="$(basename "$i")"
+      if [ ! -d "${LOGDIR}"/"${dirname}" ] ; then
+        MakeDir "${LOGDIR}"/"${dirname}"
       fi
-      $CP -p $i ${LOGDIR}/${dirname}/${filename} 2>/dev/null
+      $CP -p "$i" "${LOGDIR}"/"${dirname}"/"${filename}" 2>/dev/null
     done
   fi
-  if [ -x $JOURNALCTL ] ; then
-    $JOURNALCTL  --all --no-pager  > ${LOGDIR}/logs/journalctl_--all_--no-pager.out
+  if [ -x "$JOURNALCTL" ] ; then
+    $JOURNALCTL  --all --no-pager  > "${LOGDIR}"/logs/journalctl_--all_--no-pager.out
   fi
 }
 
@@ -1724,23 +1717,23 @@ system_logs_info() {
 selinux_info() {
   Echo "Section - SElinux Section checks"
   SELINUXDIR=${LOGDIR}/selinux
-  MakeDir ${SELINUXDIR}
-  if [ -x $SESTATUS ] ; then
-    $SESTATUS     > ${SELINUXDIR}/sestatus.out     2>&1
-    $SESTATUS -bv > ${SELINUXDIR}/sestatus_-bv.out 2>&1
+  MakeDir "${SELINUXDIR}"
+  if [ -x "$SESTATUS" ] ; then
+    $SESTATUS     > "${SELINUXDIR}"/sestatus.out     2>&1
+    $SESTATUS -bv > "${SELINUXDIR}"/sestatus_-bv.out 2>&1
   fi
-  if [ -x $SEMANAGE ] ; then
-    $SEMANAGE port -l   > ${SELINUXDIR}/semanage_port_-l.out      2>&1
-    $SEMANAGE login -l    > ${SELINUXDIR}/semanage_login_-l.out     2>&1
-    $SEMANAGE user -l   > ${SELINUXDIR}/semanage_user_-l.out      2>&1
-    $SEMANAGE node -l   > ${SELINUXDIR}/semanage_node_-l.out      2>&1
-    $SEMANAGE interface -l    > ${SELINUXDIR}/semanage_interface_-l.out 2>&1
-    $SEMANAGE boolean -l    > ${SELINUXDIR}/semanage_boolean_-l.out   2>&1
+  if [ -x "$SEMANAGE" ] ; then
+    $SEMANAGE port -l   > "${SELINUXDIR}"/semanage_port_-l.out      2>&1
+    $SEMANAGE login -l    > "${SELINUXDIR}"/semanage_login_-l.out     2>&1
+    $SEMANAGE user -l   > "${SELINUXDIR}"/semanage_user_-l.out      2>&1
+    $SEMANAGE node -l   > "${SELINUXDIR}"/semanage_node_-l.out      2>&1
+    $SEMANAGE interface -l    > "${SELINUXDIR}"/semanage_interface_-l.out 2>&1
+    $SEMANAGE boolean -l    > "${SELINUXDIR}"/semanage_boolean_-l.out   2>&1
   fi
-  if [ -x $GETSEBOOL ] ; then
-    $GETSEBOOL -a  > ${LOGDIR}/selinux/getsebool_-a.out 2>&1
+  if [ -x "$GETSEBOOL" ] ; then
+    $GETSEBOOL -a  > "${LOGDIR}"/selinux/getsebool_-a.out 2>&1
   else
-    echo "getsebool not installed " >  ${LOGDIR}/selinux/getsebool_-a.out 2>&1
+    echo "getsebool not installed " >  "${LOGDIR}"/selinux/getsebool_-a.out 2>&1
   fi
 }
 
@@ -1756,17 +1749,17 @@ selinux_info() {
 xen_info() {
   if [ -d /etc/xen ] ; then
     Echo "Section - xen Section checks"
-    MakeDir ${VIRT}/xen
-    if [ -x $XM  ] ; then
-      $XM list        > $VIRT/xen/xm_list.out       2>&1
-      $XM info        > $VIRT/xen/xm_info.out       2>&1
-      $XM logs        > $VIRT/xen/xm_log.out        2>&1
-      $XM dmesg       > $VIRT/xen/xm_dmesg.out      2>&1
-      $XM vcpu-list   > $VIRT/xen/xm_vcpu-list.out  2>&1
-      for myHost in $($XM list  2>/dev/null | egrep -v "VCPUs |^Domain-0") ; do
-        $XM network-list $myHost  > $VIRT/xen/xm_network-list_${myHost}.out   2>&1
-        $XM uptime $myHost        > $VIRT/xen/xm_uptime_${myHost}.out         2>&1
-        $VIRSH dominfo $myHost    > $VIRT/xen/virsh_dominfo_${myHost}.out     2>&1
+    MakeDir "${VIRT}"/xen
+    if [ -x "$XM"  ] ; then
+      $XM list        > "$VIRT"/xen/xm_list.out       2>&1
+      $XM info        > "$VIRT"/xen/xm_info.out       2>&1
+      $XM logs        > "$VIRT"/xen/xm_log.out        2>&1
+      $XM dmesg       > "$VIRT"/xen/xm_dmesg.out      2>&1
+      $XM vcpu-list   > "$VIRT"/xen/xm_vcpu-list.out  2>&1
+      for myHost in $($XM list  2>/dev/null | grep -E -v "VCPUs |^Domain-0") ; do
+        $XM network-list "$myHost"  > "$VIRT"/xen/xm_network-list_"${myHost}".out   2>&1
+        $XM uptime "$myHost"        > "$VIRT"/xen/xm_uptime_"${myHost}".out         2>&1
+        $VIRSH dominfo "$myHost"    > "$VIRT"/xen/virsh_dominfo_"${myHost}".out     2>&1
       done
     fi
   fi
@@ -1782,18 +1775,18 @@ xen_info() {
 ##############################################################################
 
 libvirt_info() {
-  if [ -x $VIRSH ] ; then
+  if [ -x "$VIRSH" ] ; then
     Echo "Section - libvirt Section "
-    MakeDir ${VIRT}/libvirt
-    MakeDir ${VIRT}/vm_configs
-    $VIRSH  list --all          >   ${VIRT}/libvirt/virsh_list_--all.out 2>&1
-    $VIRSH  net-list --all      >   ${VIRT}/libvirt/virsh_net-list_--all.out 2>&1
+    MakeDir "${VIRT}"/libvirt
+    MakeDir "${VIRT}"/vm_configs
+    $VIRSH  list --all          >   "${VIRT}"/libvirt/virsh_list_--all.out 2>&1
+    $VIRSH  net-list --all      >   "${VIRT}"/libvirt/virsh_net-list_--all.out 2>&1
     $VIRSH -c qemu:///system capabilities \
-              > ${VIRT}/libvirt/virsh_-c_qemu:___system_capabilities.out 2>&1
+              > "${VIRT}"/libvirt/virsh_-c_qemu:___system_capabilities.out 2>&1
     # Next Dump out all the running configs for each of the VMs
-    List=$( $VIRSH list --all 2>/dev/null | egrep -v "State|^-" | awk '{print $2}' | sed '/^$/d')
+    List=$( $VIRSH list --all 2>/dev/null | grep -E -v "State|^-" | awk '{print $2}' | sed '/^$/d')
     for i in $List ; do
-      $VIRSH dumpxml $i > ${VIRT}/vm_configs/${i}.xml 2>&1
+      $VIRSH dumpxml "$i" > "${VIRT}"/vm_configs/"${i}".xml 2>&1
     done
   fi
 }
@@ -1808,24 +1801,24 @@ libvirt_info() {
 ##############################################################################
 
 docker_info() {
-  if [ -x $DOCKER ] ; then
+  if [ -x "$DOCKER" ] ; then
     Echo "Section - Docker"
     DockerDir=${VIRT}/docker
-    MakeDir $DockerDir
-    $DOCKER ps     > $DockerDir/docker_ps.out     2>&1
-    $DOCKER ps -a  > $DockerDir/docker_ps_-a.out  2>&1
-    $DOCKER ps -l  > $DockerDir/docker_ps_-l.out  2>&1
-    $DOCKER images > $DockerDir/images.out        2>&1
+    MakeDir "$DockerDir"
+    $DOCKER ps     > "$DockerDir"/docker_ps.out     2>&1
+    $DOCKER ps -a  > "$DockerDir"/docker_ps_-a.out  2>&1
+    $DOCKER ps -l  > "$DockerDir"/docker_ps_-l.out  2>&1
+    $DOCKER images > "$DockerDir"/images.out        2>&1
     # $DOCKER events > $DockerDir/images.out 2>&1
     for containerID in $($DOCKER ps -l | grep -v STATUS | awk '{print $2}' ) ; do
-      containerIDName=$( echo $containerID | sed 's/\//_/g')
-      $DOCKER inspect $containerID  > $DockerDir/docker_inspect_${containerIDName}.out 2>&1
-      $DOCKER port    $containerID  > $DockerDir/docker_port_${containerIDName}.out 2>&1
-      $DOCKER logs    $containerID  > $DockerDir/docker_logs_${containerIDName}.out 2>&1
+      containerIDName=$( echo "$containerID" | sed 's/\//_/g')
+      $DOCKER inspect "$containerID"  > "$DockerDir"/docker_inspect_"${containerIDName}".out 2>&1
+      $DOCKER port    "$containerID"  > "$DockerDir"/docker_port_"${containerIDName}".out 2>&1
+      $DOCKER logs    "$containerID"  > "$DockerDir"/docker_logs_"${containerIDName}".out 2>&1
     done
     for imageID in $($DOCKER ps -l | grep -v STATUS | awk '{print $2}' ) ; do
-      imageIDName=$( echo $imageID | sed 's/\//_/g')
-      $DOCKER history $imageID  > $DockerDir/docker_history_${imageIDName}.out 2>&1
+      imageIDName=$( echo "$imageID" | sed 's/\//_/g')
+      $DOCKER history "$imageID"  > "$DockerDir"/docker_history_"${imageIDName}".out 2>&1
     done
   fi
 }
@@ -1843,8 +1836,8 @@ yp_info() {
   if [ -x "$YPWHICH" ] ; then
     Echo "Section - NIS/YP Services "
     YPDIR=${LOGDIR}/yp
-    MakeDir ${YPDIR}
-    $YPWHICH -m > ${YPDIR}/ypwhich-m.out 2>&1
+    MakeDir "${YPDIR}"
+    $YPWHICH -m > "${YPDIR}"/ypwhich-m.out 2>&1
   fi
 }
 
@@ -1859,42 +1852,42 @@ yp_info() {
 
 network_info() {
   Echo "Section - Networking "
-  MakeDir ${LOGDIR}/network
-  $IFCONFIG  -a   > ${LOGDIR}/network/ifconfig_-a.out    2>&1
-  $NETSTAT -rn    > ${LOGDIR}/network/netstat_-rn.out    2>&1
-  $NETSTAT -lan   > ${LOGDIR}/network/netstat_-lan.out   2>&1
-  $NETSTAT -lav   > ${LOGDIR}/network/netstat_-lav.out   2>&1
-  $NETSTAT -tulpn > ${LOGDIR}/network/netstat_-tulpn.out 2>&1
-  $NETSTAT -ape   > ${LOGDIR}/network/netstat_-ape.out   2>&1
-  $NETSTAT -uan   > ${LOGDIR}/network/netstat_-uan.out   2>&1
-  $NETSTAT -s     > ${LOGDIR}/network/netstat_-s.out     2>&1
-  $NETSTAT -in    > ${LOGDIR}/network/netstat_-in.out    2>&1
-  $ROUTE  -nv     > ${LOGDIR}/network/route_-nv.out      2>&1
-  $ARP  -a        > ${LOGDIR}/network/arp_-a.out         2>&1
+  MakeDir "${LOGDIR}"/network
+  $IFCONFIG  -a   > "${LOGDIR}"/network/ifconfig_-a.out    2>&1
+  $NETSTAT -rn    > "${LOGDIR}"/network/netstat_-rn.out    2>&1
+  $NETSTAT -lan   > "${LOGDIR}"/network/netstat_-lan.out   2>&1
+  $NETSTAT -lav   > "${LOGDIR}"/network/netstat_-lav.out   2>&1
+  $NETSTAT -tulpn > "${LOGDIR}"/network/netstat_-tulpn.out 2>&1
+  $NETSTAT -ape   > "${LOGDIR}"/network/netstat_-ape.out   2>&1
+  $NETSTAT -uan   > "${LOGDIR}"/network/netstat_-uan.out   2>&1
+  $NETSTAT -s     > "${LOGDIR}"/network/netstat_-s.out     2>&1
+  $NETSTAT -in    > "${LOGDIR}"/network/netstat_-in.out    2>&1
+  $ROUTE  -nv     > "${LOGDIR}"/network/route_-nv.out      2>&1
+  $ARP  -a        > "${LOGDIR}"/network/arp_-a.out         2>&1
   if [ -x "$IP" ] ; then
-    $IP  add    > ${LOGDIR}/network/ip_add.out     2>&1
-    $IP  route  > ${LOGDIR}/network/ip_route.out   2>&1
-    $IP  link   > ${LOGDIR}/network/ip_link.out    2>&1
-    $IP  rule   > ${LOGDIR}/network/ip_rule.out    2>&1
+    $IP  add    > "${LOGDIR}"/network/ip_add.out     2>&1
+    $IP  route  > "${LOGDIR}"/network/ip_route.out   2>&1
+    $IP  link   > "${LOGDIR}"/network/ip_link.out    2>&1
+    $IP  rule   > "${LOGDIR}"/network/ip_rule.out    2>&1
   fi
   if [ -x "$IWCONFIG" ] ; then
-    $IWCONFIG > ${LOGDIR}/network/iwconfig.out 2>&1
+    $IWCONFIG > "${LOGDIR}"/network/iwconfig.out 2>&1
   fi
   if [ -x "${MIITOOL}" ] ; then
-     ${MIITOOL} > ${LOGDIR}/network/mii-tool.out 2>&1
+     ${MIITOOL} > "${LOGDIR}"/network/mii-tool.out 2>&1
   fi
-  if [ -x $BIOSDEVNAME ] ; then
-    $BIOSDEVNAME -d > ${LOGDIR}/network/biosdevname_-d.out 2>&1
+  if [ -x "$BIOSDEVNAME" ] ; then
+    $BIOSDEVNAME -d > "${LOGDIR}"/network/biosdevname_-d.out 2>&1
   fi
   #
   # Collect bridging information
   #
   if [ "$OSNAME" == "Linux" ] ; then
     if [ -x "${BRCTL}" ] ; then
-      $BRCTL show > ${LOGDIR}/network/brctl_show.out 2>&1
-      for myBridge in $($BRCTL show | grep -v "STP enabled" |  grep ^[a-zA-Z] | awk '{ print $1}') ; do
-        $BRCTL showmacs $myBridge > ${LOGDIR}/network/btctl_showmacs_${myBridge}.out 2>&1
-        $BRCTL showstp  $myBridge > ${LOGDIR}/network/btctl_showstp_${myBridge}.out 2>&1
+      $BRCTL show > "${LOGDIR}"/network/brctl_show.out 2>&1
+      for myBridge in $($BRCTL show | grep -v "STP enabled" |  grep "^[a-zA-Z]" | awk '{ print $1}') ; do
+        $BRCTL showmacs "$myBridge" > "${LOGDIR}"/network/brctl_showmacs_"${myBridge}".out 2>&1
+        $BRCTL showstp  "$myBridge" > "${LOGDIR}"/network/brctl_showstp_"${myBridge}".out 2>&1
       done
     fi
   fi
@@ -1912,12 +1905,12 @@ network_info() {
 iptables_info() {
   if [ -x "$IPTABLES" ] ; then
     Echo "Section - iptables check"
-    $IPTABLES -L            > ${LOGDIR}/network/iptables-L.out
-    $IPTABLES -t filter -nvL  > ${LOGDIR}/network/iptables-t_filter-nvL.out
-    $IPTABLES -t mangle -nvL  > ${LOGDIR}/network/iptables-t_mangle-nvL.out
-    $IPTABLES -t nat -nvL   > ${LOGDIR}/network/iptables_-t_nat_-nvL.out
+    $IPTABLES -L            > "${LOGDIR}"/network/iptables-L.out
+    $IPTABLES -t filter -nvL  > "${LOGDIR}"/network/iptables-t_filter-nvL.out
+    $IPTABLES -t mangle -nvL  > "${LOGDIR}"/network/iptables-t_mangle-nvL.out
+    $IPTABLES -t nat -nvL   > "${LOGDIR}"/network/iptables_-t_nat_-nvL.out
   else
-    echo "no iptables in kernel"   > ${LOGDIR}/network/iptables-NO-IP-TABLES
+    echo "no iptables in kernel"   > "${LOGDIR}"/network/iptables-NO-IP-TABLES
   fi
 }
 
@@ -1933,7 +1926,7 @@ iptables_info() {
 ipchains_info() {
   if [ -x "$IPCHAINS" ] ; then
     Echo "Section - ipchains check"
-    $IPCHAINS -L -n > ${LOGDIR}/network/ipchains_-L_-n.out
+    $IPCHAINS -L -n > "${LOGDIR}"/network/ipchains_-L_-n.out
   fi
 }
 
@@ -1952,9 +1945,9 @@ ethtool_info() {
     for version in 4 6 ; do
       INTERFACES=$( cat /proc/net/dev | grep "[0-9]:" | awk -F: '{print $1 }' )
       for i in $INTERFACES ; do
-        $ETHTOOL $i        >  ${LOGDIR}/network/ethtool_ipv${version}_${i}.out    2>&1
-        $ETHTOOL -i $i     >> ${LOGDIR}/network/ethtool_ipv${version}_-i_${i}.out 2>&1
-        $ETHTOOL -S $i     >> ${LOGDIR}/network/ethtool_ipv${version}_-S_${i}.out 2>&1
+        $ETHTOOL "$i"        >  "${LOGDIR}"/network/ethtool_ipv${version}_"${i}".out    2>&1
+        $ETHTOOL -i "$i"     >> "${LOGDIR}"/network/ethtool_ipv${version}_-i_"${i}".out 2>&1
+        $ETHTOOL -S "$i"     >> "${LOGDIR}"/network/ethtool_ipv${version}_-S_"${i}".out 2>&1
       done
     done
   fi
@@ -1970,28 +1963,28 @@ ethtool_info() {
 ##############################################################################
 
 redhat_cluster_info() {
-  if [ -x $CLUSTAT ] ; then
+  if [ -x "$CLUSTAT" ] ; then
     Echo "Section - Redhat Cluster checks"
     MyClusterDir=${CLUSTERDIR}/redhat
-    MakeDir ${CLUSTERDIR}/redhat
-    $CLUSTAT      > $MyClusterDir/clustat.out             2>&1
-    $CLUSTAT -f   > $MyClusterDir/clustat_-f.out          2>&1
-    $CLUSTAT -l   > $MyClusterDir/clustat_-l.out          2>&1
-    $CLUSTAT -I   > $MyClusterDir/clustat_-I.out          2>&1
-    $CLUSTAT -v   > $MyClusterDir/clustat_-v.out          2>&1
-    $CLUSTAT -x   > $MyClusterDir/clustat_-x.out          2>&1
-    $CLUSVCADM -v > $MyClusterDir/clusvcadm_-x.out        2>&1
-    $CLUSVCADM -S > $MyClusterDir/clusvcadm_-S.out        2>&1
+    MakeDir "${CLUSTERDIR}"/redhat
+    $CLUSTAT      > "$MyClusterDir"/clustat.out             2>&1
+    $CLUSTAT -f   > "$MyClusterDir"/clustat_-f.out          2>&1
+    $CLUSTAT -l   > "$MyClusterDir"/clustat_-l.out          2>&1
+    $CLUSTAT -I   > "$MyClusterDir"/clustat_-I.out          2>&1
+    $CLUSTAT -v   > "$MyClusterDir"/clustat_-v.out          2>&1
+    $CLUSTAT -x   > "$MyClusterDir"/clustat_-x.out          2>&1
+    $CLUSVCADM -v > "$MyClusterDir"/clusvcadm_-x.out        2>&1
+    $CLUSVCADM -S > "$MyClusterDir"/clusvcadm_-S.out        2>&1
     #
     # List out Quorum devices and CMAN_TOOL
     #
-    if [ -x $MKQDISK ] ; then
-      $MKQDISK -L >>  $MyClusterDir/mkqdisk_-L.out  2>&1
+    if [ -x "$MKQDISK" ] ; then
+      $MKQDISK -L >>  "$MyClusterDir"/mkqdisk_-L.out  2>&1
     fi
     # added by Ruggero Ruggeri
-    if [ -x $CMAN_TOOL ] ; then
-      $CMAN_TOOL status >>  $MyClusterDir/cman_tool_status.out 2>&1
-      $CMAN_TOOL nodes >>   $MyClusterDir/cman_tool_nodes.out  2>&1
+    if [ -x "$CMAN_TOOL" ] ; then
+      $CMAN_TOOL status >>  "$MyClusterDir"/cman_tool_status.out 2>&1
+      $CMAN_TOOL nodes >>   "$MyClusterDir"/cman_tool_nodes.out  2>&1
     fi
   fi
 }
@@ -2012,20 +2005,20 @@ veritas_cluster_info() {
   if [ -f /etc/VRTSvcs/conf/config/main.cf ] ; then
     Echo "Section - Veritas Cluster Checks"
     VCSDIR=${CLUSTERDIR}/veritas
-    MakeDir ${VCSDIR}
+    MakeDir "${VCSDIR}"
     if [ -d /var/VRTSvcs/log ] ; then
-      MakeDir  ${LOGDIR}/var/VRTSvcs/log
-      $CP -p  /var/VRTSvcs/log/* ${LOGDIR}/var/VRTSvcs/log
+      MakeDir  "${LOGDIR}"/var/VRTSvcs/log
+      $CP -p  /var/VRTSvcs/log/* "${LOGDIR}"/var/VRTSvcs/log
     fi
-    $HASTATUS -sum       >   ${VCSDIR}/hastatus_-sum.out 2>&1
-    $HARES -list         >   ${VCSDIR}/hares_-list.out   2>&1
-    $HAGRP -list         >   ${VCSDIR}/hagrp_-list.out   2>&1
-    $HATYPE -list        >   ${VCSDIR}/hatype_-list.out  2>&1
-    $HAUSER -list        >   ${VCSDIR}/hauser_-list.out  2>&1
-    $LLTSTAT -vvn        >   ${VCSDIR}/lltstat_-vvn.out  2>&1
-    $GABCONFIG -a        >   ${VCSDIR}/gabconfig_-a.out  2>&1
+    $HASTATUS -sum       >   "${VCSDIR}"/hastatus_-sum.out 2>&1
+    $HARES -list         >   "${VCSDIR}"/hares_-list.out   2>&1
+    $HAGRP -list         >   "${VCSDIR}"/hagrp_-list.out   2>&1
+    $HATYPE -list        >   "${VCSDIR}"/hatype_-list.out  2>&1
+    $HAUSER -list        >   "${VCSDIR}"/hauser_-list.out  2>&1
+    $LLTSTAT -vvn        >   "${VCSDIR}"/lltstat_-vvn.out  2>&1
+    $GABCONFIG -a        >   "${VCSDIR}"/gabconfig_-a.out  2>&1
     if [ -f  /etc/VRTSvcs/conf/config/main.cf ] ; then
-        $HACF -verify /etc/VRTSvcs/conf/config/main.cf > ${VCSDIR}/hacf-verify.out 2>&1
+        $HACF -verify /etc/VRTSvcs/conf/config/main.cf > "${VCSDIR}"/hacf-verify.out 2>&1
     fi
   fi
 }
@@ -2040,24 +2033,24 @@ veritas_cluster_info() {
 ##############################################################################
 
 pacemake_cluster_info() {
-  if [ -x $CRM_MON ] ; then
+  if [ -x "$CRM_MON" ] ; then
     Echo "Section - CRM Cluster checks"
     CRMDIR=${CLUSTERDIR}/crm
-    MakeDir ${CRMDIR}
-    $CRM_MON --version > ${CRMDIR}/crm_mon_--version.out
-    if [ -x $CRM ] ; then
-      $CRM status                 > ${CRMDIR}/crm_status.out
-      $CRM configure show         > ${CRMDIR}/crm_configure_show.out
-      $CRM configure show xml     > ${CRMDIR}/crm_configure_show_xml.out
-      $CRM ra classes             > ${CRMDIR}/crm_ra_classes.out
-      $CRM ra list ocf heartbeat  > ${CRMDIR}/crm_ra_list_ocf_heartbeat.out
-      $CRM ra list ocf pacemaker  > ${CRMDIR}/crm_ra_list_ocf_pacemaker.out
+    MakeDir "${CRMDIR}"
+    $CRM_MON --version > "${CRMDIR}"/crm_mon_--version.out
+    if [ -x "$CRM" ] ; then
+      $CRM status                 > "${CRMDIR}"/crm_status.out
+      $CRM configure show         > "${CRMDIR}"/crm_configure_show.out
+      $CRM configure show xml     > "${CRMDIR}"/crm_configure_show_xml.out
+      $CRM ra classes             > "${CRMDIR}"/crm_ra_classes.out
+      $CRM ra list ocf heartbeat  > "${CRMDIR}"/crm_ra_list_ocf_heartbeat.out
+      $CRM ra list ocf pacemaker  > "${CRMDIR}"/crm_ra_list_ocf_pacemaker.out
     fi
-    if [ -x $CRM_VERIFY ] ; then
-      $CRM_VERIFY -L > ${CRMDIR}/crm_verify_-L.out
+    if [ -x "$CRM_VERIFY" ] ; then
+      $CRM_VERIFY -L > "${CRMDIR}"/crm_verify_-L.out
     fi
-    if [ -x $CIBADMIN ] ; then
-      $CIBADMIN -Ql > ${CRMDIR}/cibadmin_-Ql.out
+    if [ -x "$CIBADMIN" ] ; then
+      $CIBADMIN -Ql > "${CRMDIR}"/cibadmin_-Ql.out
     fi
   fi
 }
@@ -2074,17 +2067,17 @@ pacemake_cluster_info() {
 printing_info() {
   Echo "Section - Printer Checks"
   PRINTDIR=${LOGDIR}/lp
-  MakeDir ${PRINTDIR}
-  MakeDir ${PRINTDIR}/general
-  if [ -x $LPSTAT ]  ; then
-    $LPSTAT -t  > ${PRINTDIR}/lpstat_-t.out 2>&1
+  MakeDir "${PRINTDIR}"
+  MakeDir "${PRINTDIR}"/general
+  if [ -x "$LPSTAT" ]  ; then
+    $LPSTAT -t  > "${PRINTDIR}"/lpstat_-t.out 2>&1
   fi
-  if [ -x $LPC ]  ; then
-    $LPC status > ${PRINTDIR}/lpstat_status.out 2>&1
+  if [ -x "$LPC" ]  ; then
+    $LPC status > "${PRINTDIR}"/lpstat_status.out 2>&1
   fi
-  $LPQ > ${PRINTDIR}/general/lpq.out  2>&1
-  if [ -x $LPQ_CUPS ] ; then
-    $LPQ_CUPS > ${PRINTDIR}/lpq.cups.out 2>&1
+  $LPQ > "${PRINTDIR}"/general/lpq.out  2>&1
+  if [ -x "$LPQ_CUPS" ] ; then
+    $LPQ_CUPS > "${PRINTDIR}"/lpq.cups.out 2>&1
   fi
 }
 
@@ -2101,11 +2094,11 @@ postfix_info() {
   if [ -d /etc/postfix ] ; then
     Echo "Section - Postfix "
     POSTDIR=${LOGDIR}/etc/postfix
-    MakeDir $POSTDIR
+    MakeDir "$POSTDIR"
     POSTTOPDIR=${LOGDIR}/mail/postfix
-    MakeDir $POSTTOPDIR
-    $POSTCONF -v    > ${POSTTOPDIR}/postconf_-v.out 2>&1
-    $POSTCONF -l    > ${POSTTOPDIR}/postconf_-l.out 2>&1
+    MakeDir "$POSTTOPDIR"
+    $POSTCONF -v    > "${POSTTOPDIR}"/postconf_-v.out 2>&1
+    $POSTCONF -l    > "${POSTTOPDIR}"/postconf_-l.out 2>&1
   fi
 }
 
@@ -2122,9 +2115,9 @@ exim_info() {
   if [ -d /etc/exim ] ; then
     Echo "Section - Exim checks"
     EXIMTOPDIR=${LOGDIR}/mail/exim
-    MakeDir $EXIMTOPTDIR
-    $EXIM -bV > ${LOGDIR}/mail/exim/exim_-bV.out
-    $EXIM -bp > ${LOGDIR}/mail/exim/exim_-bp.out
+    MakeDir "$EXIMTOPDIR"
+    $EXIM -bV > "${LOGDIR}"/mail/exim/exim_-bV.out
+    $EXIM -bp > "${LOGDIR}"/mail/exim/exim_-bp.out
   fi
 }
 
@@ -2141,8 +2134,8 @@ dovecot_info() {
   if [ -d /etc/dovecot ] ; then
     Echo "Section - Dovecot checks"
     DOVETOPDIR=${LOGDIR}/mail/dovecot
-    MakeDir $DOVETOPTDIR
-    $DOVECOT -a > ${LOGDIR}/mail/dovecot/dovecote_-a.out
+    MakeDir "$DOVETOPDIR"
+    $DOVECOT -a > "${LOGDIR}"/mail/dovecot/dovecote_-a.out
   fi
 }
 
@@ -2158,16 +2151,16 @@ dovecot_info() {
 time_info() {
   Echo "Section - NTP"
   TIMEDIR=${LOGDIR}/etc/time
-  MakeDir ${TIMEDIR}
-  $DATE > ${TIMEDIR}/date
+  MakeDir "${TIMEDIR}"
+  $DATE > "${TIMEDIR}"/date
   if [ -f /usr/share/zoneinfo ] ; then
-    $CP -p /usr/share/zoneinfo  ${TIMEDIR}/zoneinfo
+    $CP -p /usr/share/zoneinfo  "${TIMEDIR}"/zoneinfo
   fi
-  if [ -x $HWCLOCK ] ; then
-    $HWCLOCK --show > ${TIMEDIR}/hwclock_--show.out
+  if [ -x "$HWCLOCK" ] ; then
+    $HWCLOCK --show > "${TIMEDIR}"/hwclock_--show.out
   fi
-  if [ -x $NTPQ  ] ; then
-    $NTPQ -p > ${TIMEDIR}/ntpq_-p.out 2>&1
+  if [ -x "$NTPQ"  ] ; then
+    $NTPQ -p > "${TIMEDIR}"/ntpq_-p.out 2>&1
   fi
 }
 
@@ -2186,15 +2179,15 @@ apache_info() {
   else
     APACHEDIR=${LOGDIR}/apache
   fi
-  if [ ! -d $APACHEDIR ] ; then
+  if [ ! -d "$APACHEDIR" ] ; then
     Echo "Section - Apache"
-    MakeDir ${APACHEDIR}
+    MakeDir "${APACHEDIR}"
   fi
-  if [ -x $APACHECTL ] ; then
-    $APACHECTL status  > ${APACHEDIR}/apachectl_status.out 2>&1
+  if [ -x "$APACHECTL" ] ; then
+    $APACHECTL status  > "${APACHEDIR}"/apachectl_status.out 2>&1
   fi
-  if [ -x $APACHE2CTL ] ; then
-    $APACHE2CTL status > ${APACHEDIR}/apache2ctl_status.out 2>&1
+  if [ -x "$APACHE2CTL" ] ; then
+    $APACHE2CTL status > "${APACHEDIR}"/apache2ctl_status.out 2>&1
   fi
 }
 
@@ -2210,18 +2203,18 @@ apache_info() {
 samba_info() {
   Echo "Section - Samba"
   SAMBADIR=${LOGDIR}/disks/samba
-  if [ ! -d ${SAMBADIR} ] ; then
-    MakeDir ${SAMBADIR}
+  if [ ! -d "${SAMBADIR}" ] ; then
+    MakeDir "${SAMBADIR}"
   fi
-  if [ -x $TESTPARM  ] ; then
-    echo "y" | $TESTPARM > ${SAMBADIR}/testparm.out 2>&1
+  if [ -x "$TESTPARM"  ] ; then
+    echo "y" | $TESTPARM > "${SAMBADIR}"/testparm.out 2>&1
   fi
-  if [ -x $WBINFO ] ; then
-    $WBINFO -g  > ${SAMBADIR}/wbinfo_-g.out 2>&1
-    $WBINFO -u  > ${SAMBADIR}/wbinfo_-g.out 2>&1
+  if [ -x "$WBINFO" ] ; then
+    $WBINFO -g  > "${SAMBADIR}"/wbinfo_-g.out 2>&1
+    $WBINFO -u  > "${SAMBADIR}"/wbinfo_-g.out 2>&1
   fi
-  if [ -x $PDBEDIT  ] ; then
-    $PDBEDIT -L ${SAMBADIR}/pdbedit_-L.out 2>&1
+  if [ -x "$PDBEDIT"  ] ; then
+    $PDBEDIT -L "${SAMBADIR}"/pdbedit_-L.out 2>&1
   fi
 }
 
@@ -2239,14 +2232,14 @@ samba_info() {
 x11_info() {
   Echo "Section - X11"
   XDIR=${LOGDIR}/X
-  MakeDir $XDIR
-  if [ -x $SYSP ] ; then
-    $SYSP -c          > ${XDIR}/sysp_-c.out
-    $SYSP -s mouse    > ${XDIR}/sysp_-s_mouse.out
-    $SYSP -s keyboard > ${XDIR}/sysp_-s_keyboard.out
+  MakeDir "$XDIR"
+  if [ -x "$SYSP" ] ; then
+    $SYSP -c          > "${XDIR}"/sysp_-c.out
+    $SYSP -s mouse    > "${XDIR}"/sysp_-s_mouse.out
+    $SYSP -s keyboard > "${XDIR}"/sysp_-s_keyboard.out
   fi
-  if [ -x $_3DDIAG ] ; then
-    $_3DDIAG  > ${XDIR}/3Ddiag.out
+  if [ -x "$_3DDIAG" ] ; then
+    $_3DDIAG  > "${XDIR}"/3Ddiag.out
   fi
 }
 
@@ -2262,10 +2255,9 @@ x11_info() {
 ##############################################################################
 
 taritup_info() {
-  cd $TOPDIR
-  $TAR czf ${TARFILE} $EXPLHEAD > /dev/null 2>&1
-  if [ $? -ne 0 ] ; then
-    if [ -x $LOGGER ] ; then
+  cd "$TOPDIR" || exit 1
+  if ! $TAR czf "${TARFILE}" "$EXPLHEAD" > /dev/null 2>&1 ; then
+    if [ -x "$LOGGER" ] ; then
       $LOGGER -s "[ERROR]: creating the linux-explorer $TARFILE"
     else
       echo "[ERROR]: creating the linux-explorer $TARFILE"
@@ -2274,9 +2266,9 @@ taritup_info() {
   fi
   if [ -t 0 ] ; then
     if [ "$OSNAME" == "Darwin" ] ; then
-      Sum=$($MD5SUM -q ${TARFILE}                  )
+      Sum=$($MD5SUM -q "${TARFILE}"                  )
     else
-      Sum=$($MD5SUM ${TARFILE} | $AWK '{print $1}' )
+      Sum=$($MD5SUM "${TARFILE}" | $AWK '{print $1}' )
     fi
     echo
     echo "A support file has been created for support purposes"
@@ -2309,7 +2301,7 @@ RemoveDir() {
       if [ ${VERBOSE} -gt 0 ] ; then
         Echo "Removing Old Directory : ${myDIR}"
       fi
-      $RM -rf ${myDIR}
+      $RM -rf "${myDIR}"
     fi
   fi
 }
@@ -2362,22 +2354,22 @@ System_Info() {
     echo "**********************************************************************"
     echo "Personal information"
     echo "**********************************************************************"
-    read -p "Company    : " COMPANY
-    read -p "Your name  : " NAME
-    read -p "Email      : " EMAIL
-    read -p "Telephone  : " TELEPHONE
-    read -p "City       : " CITY
-    read -p "Zipcode    : " ZIPCODE
-    read -p "Country    : " COUNTRY
+    read -r -p "Company    : " COMPANY
+    read -r -p "Your name  : " NAME
+    read -r -p "Email      : " EMAIL
+    read -r -p "Telephone  : " TELEPHONE
+    read -r -p "City       : " CITY
+    read -r -p "Zipcode    : " ZIPCODE
+    read -r -p "Country    : " COUNTRY
     echo
     echo "**********************************************************************"
     echo "System information"
     echo "**********************************************************************"
-    read -p "Problem description                        : " PROBLEM
-    read -p "System description                         : " SYSTEM
-    read -p "Environment (test/dev/prod)                : " ENVIRONMENT
+    read -r -p "Problem description                        : " PROBLEM
+    read -r -p "System description                         : " SYSTEM
+    read -r -p "Environment (test/dev/prod)                : " ENVIRONMENT
     echo
-    read -p "Are you sure to continue? (Y/n)            : " REPLY
+    read -r -p "Are you sure to continue? (Y/n)            : " REPLY
     if [[ "$REPLY"  = [Yy] ]]; then
       Echo "Starting support gathering process."
     else
@@ -2393,17 +2385,17 @@ System_Info() {
     SWAPINF=$(sysctl vm.swapusage)
   else
     Mem=$(cat /proc/meminfo | grep ^MemTotal: | awk '{print $2}')
-    MEMINFO=$(echo $(($Mem / 1000000)))
+    MEMINFO=$((Mem / 1000000))
     VMSTATS=$($VMSTAT 2 5 | $SED '1d' | $COLUMN -t  2> /dev/null )
     SWAPINF=$($SWAPON -s | $GREP -v "Filename")
   fi
-  if [ -x $LSB_RELEASE ] ; then
+  if [ -x "$LSB_RELEASE" ] ; then
     LSB_RELEASE_INFO=$(${LSB_RELEASE} -a )
   else
     LSB_RELEASE_INFO="Could not find LSB_RELEASE info"
   fi
-  if [ -x $DMIDECODE ] ; then
-    SYSTEM=$($DMIDECODE -t 1 | grep "Product Name:" | awk -F\: '{print $2}')
+  if [ -x "$DMIDECODE" ] ; then
+    SYSTEM=$($DMIDECODE -t 1 | grep "Product Name:" | awk -F: '{print $2}')
   else
     SYSTEM="Unknown"
   fi
@@ -2525,10 +2517,9 @@ copy_etc() {
   Echo "Section - Copy etc"
   if [ ! -d "${LOGDIR}/etc" ]; then
     MakeDir "${LOGDIR}/etc"
-    $RSYNC -a /etc/* ${LOGDIR}/etc/
-    if [ -f ${LOGDIR}/etc/shadow ] ; then
-      $RM -f ${LOGDIR}/etc/shadow
-    fi
+    CopyTree /etc/* "${LOGDIR}"/etc/
+    $RM -f "${LOGDIR}"/etc/shadow "${LOGDIR}"/etc/shadow- "${LOGDIR}"/etc/gshadow "${LOGDIR}"/etc/gshadow- "${LOGDIR}"/etc/security/opasswd
+    $RM -f "${LOGDIR}"/etc/ssh/ssh_host_*_key
   fi
 }
 
@@ -2545,7 +2536,7 @@ installation_details() {
   Echo "Section - Installation info"
   if [ -f "/root/anaconda-ks.cfg" ]; then
     MakeDir "${LOGDIR}/system/Installation"
-    $CP -p "/root/anaconda-ks.cfg" ${LOGDIR}/system/Installation/anaconda-ks.cfg
+    $CP -p "/root/anaconda-ks.cfg" "${LOGDIR}"/system/Installation/anaconda-ks.cfg
   fi
 }
 
@@ -2572,16 +2563,15 @@ trap '$RM -f $TMPFILE >/dev/null 2>&1; exit' 0 1 2 3 15
 #                   Check the command line options
 ##############################################################################
 
-while getopts ":d:k:t:gvhV" OPT ; do
+while getopts ":d:t:kgvhVsD" OPT ; do
   case "$OPT" in
     d)
-      if [ $OPTARG = "/" ] ; then
+      if [ "$OPTARG" = "/" ] ; then
         echo "ERROR: root directory selected as target! "
         echo "Exiting."
         exit 1
-      elif [ $OPTARG != "" ] ; then
+      elif [ "$OPTARG" != "" ] ; then
         TOPDIR=${OPTARG%%/}
-        echo "DEBUG: TOPDIR <$TOPDIR>"
         CWDIR=$(pwd)
       fi
       ;;
@@ -2614,6 +2604,10 @@ while getopts ":d:k:t:gvhV" OPT ; do
     h)
       ShowUsage
       ;;
+    \?|:)
+      echo "ERROR: Invalid option or missing argument: -$OPTARG"
+      ShowUsage
+      ;;
   esac
 done
 
@@ -2630,8 +2624,8 @@ fi
  NOTFNDLOG="${LOGDIR}/command_not_found.out"
 CLUSTERDIR=${LOGDIR}/clusters
 
-if [ ! -d $LOGDIR ] ; then
-  /bin/mkdir  -p $LOGDIR
+if [ ! -d "$LOGDIR" ] ; then
+  /bin/mkdir  -p "$LOGDIR"
 fi
 
 # find ALL my commands for this script
@@ -2641,8 +2635,6 @@ findCmds
 System_Info
 
 Echo "Creating Explorer Directory : $LOGDIR"
-
-RemoveDir ${LOGTOP}
 
 # echo "LOGDIR : \"${TOPDIR}/linux/${MYHOSTNAME}-${DATE}/output\" "
 
@@ -2659,16 +2651,16 @@ fi
 
 # Make the directory I'm going to store all the files
 
-if [ ! -d $LOGDIR ] ; then
-  MakeDir $LOGDIR
+if [ ! -d "$LOGDIR" ] ; then
+  MakeDir "$LOGDIR"
 
 fi
 
 if [ -f /tmp/README ] ; then
-  mv /tmp/README ${LOGDIR}/README
+  mv /tmp/README "${LOGDIR}"/README
 fi
 
-echo "$MYVERSION" > ${LOGDIR}/rev
+echo "$MYVERSION" > "${LOGDIR}"/rev
 
 copy_etc
 
@@ -2678,6 +2670,6 @@ taritup_info
 
 # Remove all the files tared up in $LOGDIR ( except tar file )
 
-if [ $KEEPFILES -eq 1 ] ; then
-  RemoveDir ${LOGDIR}
+if [ "$KEEPFILES" -ne 1 ] ; then
+  RemoveDir "${LOGDIR}"
 fi
